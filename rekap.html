@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REKAP SINYAL - Neuron AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#020617] text-slate-300 p-6 md:p-10 font-sans">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-black text-blue-500 italic uppercase italic">History Backtest</h1>
+            <a href="index.html" class="text-xs bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-700 transition">Kembali ke Live Dashboard</a>
+        </div>
+
+        <div class="bg-slate-900/50 rounded-[2rem] border border-slate-800 overflow-hidden shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-800/50 text-[10px] uppercase tracking-widest text-slate-500">
+                        <th class="p-6">Waktu (Server)</th>
+                        <th class="p-6">Asset</th>
+                        <th class="p-6 text-center">Sinyal</th>
+                        <th class="p-6 text-right">Entry Price</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="text-sm">
+                    </tbody>
+            </table>
+        </div>
+        <p id="loading" class="text-center mt-10 text-slate-600 animate-pulse text-xs">Menarik data dari server PythonAnywhere...</p>
+    </div>
+
+    <script>
+        async function loadRekap() {
+            try {
+                const res = await fetch('https://kisampurnaraga.pythonanywhere.com/get-backtest');
+                const data = await res.json();
+                const tbody = document.getElementById('table-body');
+                const loader = document.getElementById('loading');
+                
+                tbody.innerHTML = '';
+                loader.style.display = 'none';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-600 italic">Belum ada sinyal yang tercatat.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-800/50 hover:bg-blue-500/5 transition duration-300">
+                            <td class="p-6 text-slate-400 font-mono text-xs">${item.timestamp}</td>
+                            <td class="p-6 font-bold text-blue-400">${item.pair}</td>
+                            <td class="p-6 text-center">
+                                <span class="bg-green-900/30 text-green-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">🚀 PUMP</span>
+                            </td>
+                            <td class="p-6 text-right font-mono font-bold text-slate-100">$${parseFloat(item.price || item.entry_price).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                document.getElementById('loading').innerText = "Gagal memuat data. Pastikan CORS aktif!";
+            }
+        }
+        loadRekap();
+    </script>
+</body>
+</html>
