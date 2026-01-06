@@ -7,31 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 md:p-10 font-sans">
-    <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-10">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div>
                 <h1 class="text-3xl font-black text-blue-500 italic uppercase">History Backtest</h1>
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Virtual Trading Simulation Results</p>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Neuron AI Simulator Performance</p>
             </div>
-            <a href="index.html" class="text-xs bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-700 transition">Kembali ke Live Dashboard</a>
+            <a href="index.html" class="text-xs bg-slate-800 px-6 py-3 rounded-2xl border border-slate-700 hover:bg-blue-600 hover:text-white transition-all duration-300 font-black uppercase tracking-widest shadow-lg">
+                Kembali ke Live Dashboard
+            </a>
         </div>
 
-        <div class="bg-slate-900/50 rounded-[2rem] border border-slate-800 overflow-hidden shadow-2xl">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-800/50 text-[10px] uppercase tracking-widest text-slate-500">
-                        <th class="p-4 md:p-6">Waktu</th>
-                        <th class="p-4 md:p-6">Entry</th>
-                        <th class="p-4 md:p-6 text-center">SL / TP (Target)</th>
-                        <th class="p-4 md:p-6">Exit Price</th>
-                        <th class="p-4 md:p-6 text-right">Result</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body" class="text-sm">
-                    </tbody>
-            </table>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Total Trades</p>
+                <h3 id="total-trades" class="text-3xl font-black text-white italic">0</h3>
+            </div>
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Win Rate (%)</p>
+                <h3 id="win-rate" class="text-3xl font-black text-blue-500 italic">0%</h3>
+            </div>
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Total Akumulasi P/L</p>
+                <h3 id="total-pnl" class="text-3xl font-black text-green-500 italic">$0.00</h3>
+            </div>
         </div>
-        <p id="loading" class="text-center mt-10 text-slate-600 animate-pulse text-xs">Menarik data dari server PythonAnywhere...</p>
+
+        <div class="bg-slate-900/50 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-md">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-[10px] uppercase tracking-widest text-slate-500 font-black">
+                            <th class="p-6">Timestamp / Asset</th>
+                            <th class="p-6">Type</th>
+                            <th class="p-6">Entry</th>
+                            <th class="p-6 text-center">Target (SL / TP)</th>
+                            <th class="p-6 text-right font-black">P/L Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        <p id="loading" class="text-center mt-10 text-slate-600 animate-pulse text-xs font-bold uppercase tracking-widest">Sinkronisasi Data Simulator...</p>
     </div>
 
     <script>
@@ -46,42 +65,67 @@
                 loader.style.display = 'none';
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-600 italic">Belum ada sinyal yang diselesaikan.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic font-bold">Belum ada sinyal yang dieksekusi oleh simulator.</td></tr>';
                     return;
                 }
 
+                let totalPnl = 0;
+                let wins = 0;
+
                 data.forEach(item => {
-                    // Warna hasil: Hijau untuk Profit, Merah untuk Loss
+                    const pnl = parseFloat(item.pnl || 0);
+                    totalPnl += pnl;
+                    if(item.result === "PROFIT") wins++;
+
                     const resultClass = item.result === "PROFIT" 
-                        ? "bg-green-900/30 text-green-500 border-green-800/50" 
-                        : "bg-red-900/30 text-red-500 border-red-800/50";
+                        ? "text-green-500 font-black" 
+                        : "text-red-500 font-black";
+                    
+                    const typeClass = item.type === "BUY" 
+                        ? "bg-blue-900/30 text-blue-400 border-blue-800/50" 
+                        : "bg-orange-900/30 text-orange-400 border-orange-800/50";
 
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-800/50 hover:bg-white/5 transition duration-300">
-                            <td class="p-4 md:p-6">
-                                <span class="text-[10px] text-slate-500 block uppercase">${item.pair}</span>
-                                <span class="font-mono text-[11px]">${item.timestamp}</span>
+                            <td class="p-6">
+                                <span class="text-[10px] text-slate-500 block uppercase font-black">${item.pair}</span>
+                                <span class="font-mono text-[11px] text-slate-400">${item.timestamp}</span>
                             </td>
-                            <td class="p-4 md:p-6 font-bold text-slate-100">$${parseFloat(item.entry).toLocaleString()}</td>
-                            <td class="p-4 md:p-6 text-center">
-                                <div class="text-[10px] space-y-1">
-                                    <div class="text-red-400/70 italic">SL: $${item.sl}</div>
-                                    <div class="text-green-400/70 italic">TP: $${item.tp}</div>
+                            <td class="p-6">
+                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${typeClass}">${item.type}</span>
+                            </td>
+                            <td class="p-6 font-mono font-bold text-slate-100">$${parseFloat(item.entry).toFixed(2)}</td>
+                            <td class="p-6 text-center">
+                                <div class="text-[9px] font-mono leading-relaxed">
+                                    <div class="text-red-400 opacity-60">SL: $${item.sl}</div>
+                                    <div class="text-green-400 opacity-60">TP: $${item.tp}</div>
                                 </div>
                             </td>
-                            <td class="p-4 md:p-6 font-mono text-slate-400">$${parseFloat(item.exit_price).toLocaleString()}</td>
-                            <td class="p-4 md:p-6 text-right">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-black border ${resultClass}">
-                                    ${item.result}
-                                </span>
+                            <td class="p-6 text-right">
+                                <div class="${resultClass} text-sm">${item.result}</div>
+                                <div class="text-[11px] font-mono ${pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                    ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
+                                </div>
                             </td>
                         </tr>
                     `;
                 });
+
+                // Update Stats Cards
+                document.getElementById('total-trades').innerText = data.length;
+                document.getElementById('win-rate').innerText = ((wins / data.length) * 100).toFixed(1) + "%";
+                document.getElementById('total-pnl').innerText = (totalPnl >= 0 ? "+" : "") + "$" + totalPnl.toFixed(2);
+                document.getElementById('total-pnl').className = totalPnl >= 0 
+                    ? "text-3xl font-black text-green-500 italic" 
+                    : "text-3xl font-black text-red-500 italic";
+
             } catch (err) {
-                document.getElementById('loading').innerText = "Gagal memuat data. Periksa koneksi API Anda.";
+                document.getElementById('loading').innerText = "Gagal memuat data. Hubungkan API PythonAnywhere.";
             }
         }
+        
+        // Refresh otomatis setiap 30 detik
+        setInterval(loadRekap, 30000);
         loadRekap();
     </script>
 </body>
