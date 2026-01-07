@@ -87,11 +87,14 @@
         const priceDisplay = document.getElementById('neuron-price');
         const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
 
-        // Fungsi cek status robot
+        // 1. Fungsi Cek Status dengan Cache Buster (?t=timestamp)
         async function checkScannerStatus() {
             try {
-                const res = await fetch(`${API_BASE}/scanner/status`);
+                // Tambahkan timestamp agar browser tidak mengambil data lama dari cache
+                const timestamp = new Date().getTime();
+                const res = await fetch(`${API_BASE}/scanner/status?t=${timestamp}`);
                 const data = await res.json();
+                
                 if(data.running) {
                     btnControl.innerText = "🛑 STOP ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
@@ -99,18 +102,32 @@
                     btnControl.innerText = "⚡ START ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
                 }
-            } catch (e) { console.log("Gagal cek status"); }
+            } catch (e) { 
+                console.log("Koneksi API Terputus"); 
+            }
         }
 
-        // Fungsi ON/OFF Robot
+        // 2. Fungsi Toggle dengan Jeda Sinkronisasi Lebih Lama
         async function toggleScanner() {
             const isRunning = btnControl.innerText.includes("STOP");
             const action = isRunning ? 'stop' : 'start';
-            btnControl.innerText = "WAIT...";
+            
+            // UI Feedback langsung agar user tidak klik berkali-kali
+            btnControl.innerText = "PROCESSING...";
+            btnControl.disabled = true;
+
             try {
                 await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
-                setTimeout(checkScannerStatus, 2000);
-            } catch (e) { alert("Gagal mengontrol robot!"); }
+                
+                // Beri jeda 3 detik (sebelumnya 2 detik) agar Linux sempat update daftar prosesnya
+                setTimeout(() => {
+                    btnControl.disabled = false;
+                    checkScannerStatus();
+                }, 3000);
+            } catch (e) { 
+                alert("Gagal mengontrol robot!"); 
+                btnControl.disabled = false;
+            }
         }
 
         // Fungsi Ambil Sinyal & Update Harga Pembanding
