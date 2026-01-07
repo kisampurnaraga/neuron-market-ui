@@ -81,24 +81,44 @@
                 let wins = 0;
 
                 currentData.forEach(item => {
+                    // 1. Pastikan PNL adalah angka
                     const pnl = parseFloat(item.pnl || 0);
                     totalPnl += pnl;
-                    if(item.result === "PROFIT" || pnl > 0) wins++;
 
-                    const resultClass = (item.result === "PROFIT" || pnl > 0) ? "text-green-500" : "text-red-500";
+                    // 2. Logika Menentukan Menang (Win)
+                    // Cek berdasarkan tulisan "PROFIT" atau jika PNL-nya positif
+                    const isWin = (item.result === "PROFIT" || pnl > 0);
+                    if (isWin) wins++;
+
+                    // 3. Tentukan Warna (Hijau untuk Profit, Merah untuk Loss)
+                    const resultClass = isWin ? "text-green-500" : "text-red-500";
                     
+                    // 4. Warna Label Tipe Order
+                    const typeClass = item.type === 'BUY' 
+                        ? 'text-blue-400 border-blue-800 bg-blue-900/20' 
+                        : 'text-orange-400 border-orange-800 bg-orange-900/20';
+
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-800/50 hover:bg-white/5 transition duration-300">
                             <td class="p-6">
-                                <span class="text-[10px] text-slate-500 block uppercase font-black">${item.pair}</span>
-                                <span class="font-mono text-[11px] text-slate-400">${item.timestamp}</span>
+                                <span class="text-[10px] text-slate-500 block uppercase font-black tracking-widest">${item.pair || 'XAUUSD'}</span>
+                                <span class="font-mono text-[11px] text-slate-400">${item.timestamp || '-'}</span>
                             </td>
                             <td class="p-6">
-                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${item.type === 'BUY' ? 'text-blue-400 border-blue-800' : 'text-orange-400 border-orange-800'}">${item.type}</span>
+                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${typeClass}">${item.type || 'SELL'}</span>
                             </td>
-                            <td class="p-6 font-mono text-slate-100">$${item.entry}</td>
-                            <td class="p-6 text-center text-[10px] font-mono">SL: ${item.sl} | TP: ${item.tp}</td>
-                            <td class="p-6 text-right ${resultClass} font-black uppercase tracking-tighter">${item.result} ($${pnl.toFixed(2)})</td>
+                            <td class="p-6 font-mono text-slate-100 font-bold">$${parseFloat(item.entry || 0).toFixed(2)}</td>
+                            <td class="p-6 text-center text-[10px] font-mono text-slate-500">
+                                <span class="text-red-900/80">SL: ${item.sl}</span> | <span class="text-green-900/80">TP: ${item.tp}</span>
+                            </td>
+                            <td class="p-6 text-right">
+                                <div class="${resultClass} font-black uppercase tracking-tighter text-sm">
+                                    ${item.result || (pnl > 0 ? 'PROFIT' : 'LOSS')}
+                                </div>
+                                <div class="font-mono text-[11px] ${pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                    ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
