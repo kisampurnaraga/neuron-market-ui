@@ -9,6 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         .font-mono-neuron { font-family: 'JetBrains+Mono', monospace; }
         .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        .btn-close-neon:hover { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 min-h-screen p-4 md:p-10 font-sans">
@@ -74,7 +75,7 @@
         </div>
 
         <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="md:col-span-2 bg-slate-900/40 p-6 rounded-[2.5rem] border border-slate-800 shadow-inner">
+            <div class="md:col-span-2">
                 </div>
 
             <div class="bg-slate-900/80 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl backdrop-blur-md">
@@ -94,25 +95,20 @@
         const btnControl = document.getElementById('btn-control');
         const priceDisplay = document.getElementById('neuron-price');
         const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
-        let currentMarketPrice = 0; // Simpan harga global untuk hitung profit
+        let currentMarketPrice = 0; 
 
-        // --- 1. SINKRONISASI TOTAL ---
         async function syncDashboard() {
             try {
                 const res = await fetch(`${API_BASE}/scan/xauusd?t=${new Date().getTime()}`, { cache: "no-store" });
                 const data = await res.json();
-
-                // Update Harga Global
                 currentMarketPrice = data.last_price;
                 priceDisplay.innerText = data.last_price > 0 ? `$${data.last_price.toLocaleString()}` : "LOADING...";
                 
-                // Update Badge Status
                 badge.innerText = data.running ? "⚖️ MARKET STABLE" : "🔴 SCANNER OFF";
                 badge.className = data.running 
                     ? "px-8 py-3 rounded-2xl font-black text-sm bg-green-900/20 text-green-500 border border-green-800/50 shadow-lg uppercase"
                     : "px-8 py-3 rounded-2xl font-black text-sm bg-red-900/20 text-red-500 border border-red-800/50 shadow-lg uppercase";
 
-                // Update Tombol
                 if(data.running) {
                     btnControl.innerText = "🛑 STOP ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest cursor-pointer";
@@ -120,17 +116,13 @@
                     btnControl.innerText = "⚡ START ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest cursor-pointer";
                 }
-
-                // Panggil List Sinyal
                 updateActiveTrades();
-
             } catch (e) {
                 priceDisplay.innerText = "OFFLINE";
                 badge.innerText = "CONNECTION LOST";
             }
         }
 
-        // --- 2. UPDATE LIST SINYAL & RUNNING PROFIT ---
         async function updateActiveTrades() {
             try {
                 const res = await fetch(`${API_BASE}/get-active-trades`);
@@ -144,18 +136,15 @@
                 }
 
                 trades.forEach(trade => {
-                    // Hitung Running P/L:
-                    // BUY: Market - Entry | SELL: Entry - Market
                     let pnl = 0;
                     if(currentMarketPrice > 0) {
                         pnl = trade.type === 'BUY' ? (currentMarketPrice - trade.entry) : (trade.entry - currentMarketPrice);
                     }
-
                     const pnlClass = pnl >= 0 ? "text-green-500" : "text-red-500";
                     const typeClass = trade.type === 'BUY' ? "text-blue-400" : "text-orange-400";
 
                     container.innerHTML += `
-                        <div class="bg-slate-800/50 p-5 rounded-3xl border border-slate-700/50 hover:border-blue-500/50 transition-all duration-500 group">
+                        <div class="bg-slate-800/50 p-5 rounded-3xl border border-slate-700/50 hover:border-blue-500/50 transition-all duration-500">
                             <div class="flex justify-between items-start mb-3">
                                 <div>
                                     <span class="text-[10px] text-slate-500 font-black block uppercase tracking-tighter">${trade.pair} / 15M</span>
@@ -166,7 +155,7 @@
                                     <span class="${pnlClass} font-mono font-bold text-lg">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 bg-[#020617]/50 p-3 rounded-2xl border border-slate-700/30">
+                            <div class="grid grid-cols-3 gap-2 bg-[#020617]/50 p-3 rounded-2xl border border-slate-700/30 mb-4">
                                 <div class="text-center border-r border-slate-800">
                                     <p class="text-[8px] text-slate-500 font-bold">ENTRY</p>
                                     <p class="text-[11px] font-mono text-white">${trade.entry}</p>
@@ -180,13 +169,31 @@
                                     <p class="text-[11px] font-mono text-red-400">${trade.sl}</p>
                                 </div>
                             </div>
+                            <button onclick="closePosition()" class="w-full py-2 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white text-[10px] font-black rounded-xl border border-red-600/30 transition-all duration-300 uppercase tracking-widest btn-close-neon">
+                                ❌ Close Position
+                            </button>
                         </div>
                     `;
                 });
             } catch (err) { console.error("Error UI Sinyal:", err); }
         }
 
-        // --- 3. KONTROL ROBOT ---
+        // FUNGSI CLOSE POSITION
+        async function closePosition() {
+            if(!confirm("Yakin ingin menutup dan menghapus sinyal ini?")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/close-trade`, { method: 'POST' });
+                const result = await res.json();
+                if(result.status === "success") {
+                    alert("Sinyal Berhasil Dihapus! Robot siap mencari peluang baru.");
+                    syncDashboard();
+                }
+            } catch (e) {
+                alert("Gagal menutup posisi. Cek koneksi backend.");
+            }
+        }
+
         async function toggleScanner() {
             const isRunning = btnControl.innerText.includes("STOP");
             const action = isRunning ? 'stop' : 'start';
@@ -205,7 +212,6 @@
             }
         }
 
-        // Jalankan Interval tunggal
         syncDashboard();
         setInterval(syncDashboard, 15000);
     </script>
