@@ -12,16 +12,20 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-10 bg-slate-900/80 p-6 rounded-3xl border border-slate-800 backdrop-blur-md shadow-2xl">
             <div class="mb-4 md:mb-0">
                 <h1 class="text-4xl font-black tracking-tighter text-blue-500 italic uppercase">Neuron Studio AI</h1>
-                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-[0.3em] font-bold italic">TradingView Real-Time Engine</p>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-[0.3em] font-bold italic">24/7 Always-On Scanner</p>
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-4">
+                <button id="btn-control" onclick="toggleScanner()" class="px-6 py-3 bg-slate-800 text-xs font-black rounded-2xl border border-slate-700 transition-all duration-300 shadow-lg flex items-center gap-2 uppercase tracking-widest">
+                    Checking Robot...
+                </button>
+
                 <a href="rekap.html" class="px-6 py-3 bg-slate-800 hover:bg-blue-600 text-slate-100 text-xs font-black rounded-2xl border border-slate-700 transition-all duration-300 shadow-lg flex items-center gap-2 uppercase tracking-widest">
-                    📊 Lihat Rekap
+                    📊 Rekap
                 </a>
 
-                <div id="status-badge" class="px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 border border-slate-700 transition-all duration-700 shadow-lg">
-                    SINKRONISASI SINYAL...
+                <div id="status-badge" class="px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 border border-slate-700 transition-all duration-700 shadow-lg uppercase">
+                    SYNC...
                 </div>
             </div>
         </header>
@@ -70,6 +74,39 @@
 
     <script>
         const badge = document.getElementById('status-badge');
+        const btnControl = document.getElementById('btn-control');
+        const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
+
+        // Fungsi cek status robot saat ini
+    async function checkScannerStatus() {
+        try {
+            const res = await fetch(`${API_BASE}/scanner/status`);
+            const data = await res.json();
+            if(data.running) {
+                btnControl.innerText = "🛑 STOP ROBOT 24/7";
+                btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
+            } else {
+                btnControl.innerText = "⚡ START ROBOT 24/7";
+                btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
+            }
+        } catch (e) { console.log("Gagal cek status"); }
+    }
+
+    // Fungsi ON/OFF Robot
+    async function toggleScanner() {
+        const isRunning = btnControl.innerText.includes("STOP");
+        const action = isRunning ? 'stop' : 'start';
+        
+        btnControl.innerText = "WAIT...";
+        try {
+            await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
+            setTimeout(checkScannerStatus, 2000); // Tunggu 2 detik lalu cek status
+        } catch (e) { alert("Gagal mengontrol robot!"); }
+    }
+
+    // Jalankan pengecekan status awal
+    checkScannerStatus();
+    setInterval(checkScannerStatus, 15000); // Cek status robot setiap 15 detik
 
         // Fungsi untuk mengambil sinyal dari backend PythonAnywhere
         async function fetchNeuronSignal() {
