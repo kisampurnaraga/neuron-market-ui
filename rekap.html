@@ -159,7 +159,11 @@
             doc.save("Neuron_Report.pdf");
         }
 
+        // Jalankan saat pertama kali buka
         loadRekap();
+
+        // Tambahkan ini agar otomatis update tiap 5 detik tanpa refresh halaman
+        setInterval(loadRekap, 5000);
     </script>
 </body>
 </html>
