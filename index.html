@@ -83,17 +83,16 @@
         // --- FUNGSI UTAMA: SINKRONISASI TOTAL ---
         async function syncDashboard() {
             try {
-                // Gunakan cache buster timestamp agar data selalu fresh
-                const res = await fetch(`${API_BASE}/scan/xauusd?t=${new Date().getTime()}`);
+                // Tambahkan no-store agar browser tidak menyimpan status "Running: True" yang lama
+                const res = await fetch(`${API_BASE}/scan/xauusd?t=${new Date().getTime()}`, {
+                    cache: "no-store"
+                });
                 const data = await res.json();
 
-                // 1. Update Harga (Neuron Price)
-                if(data.last_price) {
-                    priceDisplay.innerText = `$${data.last_price.toLocaleString()}`;
-                    priceDisplay.className = "text-xl font-mono-neuron font-bold text-blue-400 glow-text";
-                }
+                // Update Harga
+                priceDisplay.innerText = data.last_price > 0 ? `$${data.last_price.toLocaleString()}` : "LOADING...";
 
-                // 2. Update Status Tombol (Robot Running?)
+                // Update Tombol Sesuai Kenyataan di Backend
                 if(data.running) {
                     btnControl.innerText = "🛑 STOP ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
@@ -101,22 +100,8 @@
                     btnControl.innerText = "⚡ START ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
                 }
-
-                // 3. Update Badge Sinyal (Market Status)
-                if(data.signal === "Detected") {
-                    badge.innerText = "🚀 PUMP DETECTED!";
-                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-green-600 text-white animate-bounce shadow-xl shadow-green-900/40 uppercase";
-                } else {
-                    badge.innerText = "⚖️ MARKET STABLE";
-                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-lg uppercase";
-                }
-
             } catch (e) {
-                console.log("Sync Error:", e);
-                badge.innerText = "🔴 API OFFLINE";
-                badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-red-900/30 text-red-500 border border-red-800/50 shadow-lg uppercase";
                 priceDisplay.innerText = "OFFLINE";
-                priceDisplay.className = "text-xl font-mono-neuron font-bold text-red-500";
             }
         }
 
