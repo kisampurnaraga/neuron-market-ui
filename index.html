@@ -66,15 +66,8 @@
                     "theme": "dark",
                     "style": "1",
                     "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "allow_symbol_change": true,
                     "container_id": "tradingview_neuron",
-                    "studies": [
-                        "RSI@tv-basicstudies",
-                        "BB@tv-basicstudies"
-                    ]
+                    "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"]
                 });
                 </script>
             </div>
@@ -87,13 +80,20 @@
         const priceDisplay = document.getElementById('neuron-price');
         const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
 
-        // 1. Fungsi Cek Status dengan Cache Buster (?t=timestamp)
-        async function checkScannerStatus() {
+        // --- FUNGSI UTAMA: SINKRONISASI TOTAL ---
+        async function syncDashboard() {
             try {
-                // Tambahkan timestamp (?t=...) agar browser tidak mengambil data lama
-                const res = await fetch(`${API_BASE}/scanner/status?t=${new Date().getTime()}`);
+                // Gunakan cache buster timestamp agar data selalu fresh
+                const res = await fetch(`${API_BASE}/scan/xauusd?t=${new Date().getTime()}`);
                 const data = await res.json();
-                
+
+                // 1. Update Harga (Neuron Price)
+                if(data.last_price) {
+                    priceDisplay.innerText = `$${data.last_price.toLocaleString()}`;
+                    priceDisplay.className = "text-xl font-mono-neuron font-bold text-blue-400 glow-text";
+                }
+
+                // 2. Update Status Tombol (Robot Running?)
                 if(data.running) {
                     btnControl.innerText = "🛑 STOP ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
@@ -101,62 +101,52 @@
                     btnControl.innerText = "⚡ START ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
                 }
-            } catch (e) { console.log("Gagal sinkron status"); }
-        }
 
-        // 2. Fungsi Toggle dengan Jeda Sinkronisasi Lebih Lama
-        async function toggleScanner() {
-            const isRunning = btnControl.innerText.includes("STOP");
-            const action = isRunning ? 'stop' : 'start';
-            
-            // UI Feedback langsung agar user tidak klik berkali-kali
-            btnControl.innerText = "PROCESSING...";
-            btnControl.disabled = true;
-
-            try {
-                await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
-                
-                // Beri jeda 3 detik (sebelumnya 2 detik) agar Linux sempat update daftar prosesnya
-                setTimeout(() => {
-                    btnControl.disabled = false;
-                    checkScannerStatus();
-                }, 3000);
-            } catch (e) { 
-                alert("Gagal mengontrol robot!"); 
-                btnControl.disabled = false;
-            }
-        }
-
-        // Fungsi Ambil Sinyal & Update Harga Pembanding
-        async function fetchNeuronSignal() {
-            try {
-                const response = await fetch(`${API_BASE}/scan/xauusd`);
-                const result = await response.json();
-
-                // 1. UPDATE HARGA (Fitur Baru)
-                if(result.last_price) {
-                    priceDisplay.innerText = `$${result.last_price.toLocaleString()}`;
-                }
-
-                // 2. UPDATE UI SIGNAL
-                if(result.signal === "Detected") {
+                // 3. Update Badge Sinyal (Market Status)
+                if(data.signal === "Detected") {
                     badge.innerText = "🚀 PUMP DETECTED!";
                     badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-green-600 text-white animate-bounce shadow-xl shadow-green-900/40 uppercase";
                 } else {
                     badge.innerText = "⚖️ MARKET STABLE";
                     badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-lg uppercase";
                 }
-            } catch (error) {
+
+            } catch (e) {
+                console.log("Sync Error:", e);
                 badge.innerText = "🔴 API OFFLINE";
                 badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-red-900/30 text-red-500 border border-red-800/50 shadow-lg uppercase";
                 priceDisplay.innerText = "OFFLINE";
+                priceDisplay.className = "text-xl font-mono-neuron font-bold text-red-500";
             }
         }
 
-        checkScannerStatus();
-        setInterval(checkScannerStatus, 15000);
-        setInterval(fetchNeuronSignal, 10000); // Sinkronisasi harga setiap 10 detik
-        fetchNeuronSignal();
+        // --- FUNGSI KONTROL: ON/OFF ROBOT ---
+        async function toggleScanner() {
+            const isRunning = btnControl.innerText.includes("STOP");
+            const action = isRunning ? 'stop' : 'start';
+            
+            btnControl.innerText = "PROCESSING...";
+            btnControl.disabled = true;
+
+            try {
+                await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
+                
+                // Beri jeda 3 detik agar sistem backend selesai memproses pkill/popen
+                setTimeout(() => {
+                    btnControl.disabled = false;
+                    syncDashboard(); // Langsung tarik data status terbaru
+                }, 3000);
+            } catch (e) { 
+                alert("Gagal mengontrol robot!"); 
+                btnControl.disabled = false;
+                syncDashboard();
+            }
+        }
+
+        // Jalankan sinkronisasi pertama kali & set interval setiap 15 detik
+        syncDashboard();
+        setInterval(syncDashboard, 15000);
+
     </script>
 </body>
 </html>
