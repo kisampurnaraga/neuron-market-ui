@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEURON STUDIO AI - TradingView Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        .font-mono-neuron { font-family: 'JetBrains+Mono', monospace; }
+        .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    </style>
 </head>
 <body class="bg-[#020617] text-slate-300 min-h-screen p-4 md:p-10 font-sans">
 
@@ -16,6 +21,11 @@
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-4">
+                <div class="flex flex-col items-end px-4 border-r border-slate-800">
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Neuron Price (USD)</span>
+                    <span id="neuron-price" class="text-xl font-mono-neuron font-bold text-blue-400 glow-text">--.---</span>
+                </div>
+
                 <button id="btn-control" onclick="toggleScanner()" class="px-6 py-3 bg-slate-800 text-xs font-black rounded-2xl border border-slate-700 transition-all duration-300 shadow-lg flex items-center gap-2 uppercase tracking-widest">
                     Checking Robot...
                 </button>
@@ -61,7 +71,6 @@
                     "hide_top_toolbar": false,
                     "allow_symbol_change": true,
                     "container_id": "tradingview_neuron",
-                    // Menambahkan indikator RSI dan Bollinger Bands secara otomatis
                     "studies": [
                         "RSI@tv-basicstudies",
                         "BB@tv-basicstudies"
@@ -75,61 +84,64 @@
     <script>
         const badge = document.getElementById('status-badge');
         const btnControl = document.getElementById('btn-control');
+        const priceDisplay = document.getElementById('neuron-price');
         const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
 
-        // Fungsi cek status robot saat ini
-    async function checkScannerStatus() {
-        try {
-            const res = await fetch(`${API_BASE}/scanner/status`);
-            const data = await res.json();
-            if(data.running) {
-                btnControl.innerText = "🛑 STOP ROBOT 24/7";
-                btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
-            } else {
-                btnControl.innerText = "⚡ START ROBOT 24/7";
-                btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
-            }
-        } catch (e) { console.log("Gagal cek status"); }
-    }
+        // Fungsi cek status robot
+        async function checkScannerStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/scanner/status`);
+                const data = await res.json();
+                if(data.running) {
+                    btnControl.innerText = "🛑 STOP ROBOT 24/7";
+                    btnControl.className = "px-6 py-3 bg-red-900/40 text-red-500 text-xs font-black rounded-2xl border border-red-800 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
+                } else {
+                    btnControl.innerText = "⚡ START ROBOT 24/7";
+                    btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
+                }
+            } catch (e) { console.log("Gagal cek status"); }
+        }
 
-    // Fungsi ON/OFF Robot
-    async function toggleScanner() {
-        const isRunning = btnControl.innerText.includes("STOP");
-        const action = isRunning ? 'stop' : 'start';
-        
-        btnControl.innerText = "WAIT...";
-        try {
-            await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
-            setTimeout(checkScannerStatus, 2000); // Tunggu 2 detik lalu cek status
-        } catch (e) { alert("Gagal mengontrol robot!"); }
-    }
+        // Fungsi ON/OFF Robot
+        async function toggleScanner() {
+            const isRunning = btnControl.innerText.includes("STOP");
+            const action = isRunning ? 'stop' : 'start';
+            btnControl.innerText = "WAIT...";
+            try {
+                await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
+                setTimeout(checkScannerStatus, 2000);
+            } catch (e) { alert("Gagal mengontrol robot!"); }
+        }
 
-    // Jalankan pengecekan status awal
-    checkScannerStatus();
-    setInterval(checkScannerStatus, 15000); // Cek status robot setiap 15 detik
-
-        // Fungsi untuk mengambil sinyal dari backend PythonAnywhere
+        // Fungsi Ambil Sinyal & Update Harga Pembanding
         async function fetchNeuronSignal() {
             try {
-                const response = await fetch('https://kisampurnaraga.pythonanywhere.com/scan/xauusd');
+                const response = await fetch(`${API_BASE}/scan/xauusd`);
                 const result = await response.json();
 
-                // Memperbarui UI berdasarkan hasil sinyal
+                // 1. UPDATE HARGA (Fitur Baru)
+                if(result.last_price) {
+                    priceDisplay.innerText = `$${result.last_price.toLocaleString()}`;
+                }
+
+                // 2. UPDATE UI SIGNAL
                 if(result.signal === "Detected") {
                     badge.innerText = "🚀 PUMP DETECTED!";
-                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-green-600 text-white animate-bounce shadow-xl shadow-green-900/40";
+                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-green-600 text-white animate-bounce shadow-xl shadow-green-900/40 uppercase";
                 } else {
                     badge.innerText = "⚖️ MARKET STABLE";
-                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-lg";
+                    badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-lg uppercase";
                 }
             } catch (error) {
                 badge.innerText = "🔴 API OFFLINE";
-                badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-red-900/30 text-red-500 border border-red-800/50 shadow-lg";
+                badge.className = "px-8 py-3 rounded-2xl font-black text-sm bg-red-900/30 text-red-500 border border-red-800/50 shadow-lg uppercase";
+                priceDisplay.innerText = "OFFLINE";
             }
         }
 
-        // Interval pemindaian setiap 10 detik
-        setInterval(fetchNeuronSignal, 10000);
+        checkScannerStatus();
+        setInterval(checkScannerStatus, 15000);
+        setInterval(fetchNeuronSignal, 10000); // Sinkronisasi harga setiap 10 detik
         fetchNeuronSignal();
     </script>
 </body>
