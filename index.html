@@ -90,9 +90,8 @@
         // 1. Fungsi Cek Status dengan Cache Buster (?t=timestamp)
         async function checkScannerStatus() {
             try {
-                // Tambahkan timestamp agar browser tidak mengambil data lama dari cache
-                const timestamp = new Date().getTime();
-                const res = await fetch(`${API_BASE}/scanner/status?t=${timestamp}`);
+                // Tambahkan timestamp (?t=...) agar browser tidak mengambil data lama
+                const res = await fetch(`${API_BASE}/scanner/status?t=${new Date().getTime()}`);
                 const data = await res.json();
                 
                 if(data.running) {
@@ -102,9 +101,7 @@
                     btnControl.innerText = "⚡ START ROBOT 24/7";
                     btnControl.className = "px-6 py-3 bg-green-900/40 text-green-500 text-xs font-black rounded-2xl border border-green-800 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-lg uppercase tracking-widest";
                 }
-            } catch (e) { 
-                console.log("Koneksi API Terputus"); 
-            }
+            } catch (e) { console.log("Gagal sinkron status"); }
         }
 
         // 2. Fungsi Toggle dengan Jeda Sinkronisasi Lebih Lama
