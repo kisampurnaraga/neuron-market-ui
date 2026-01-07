@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REKAP SINYAL - Neuron AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 md:p-10 font-sans">
     <div class="max-w-6xl mx-auto">
@@ -13,9 +15,18 @@
                 <h1 class="text-3xl font-black text-blue-500 italic uppercase">History Backtest</h1>
                 <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Neuron AI Simulator Performance</p>
             </div>
-            <a href="index.html" class="text-xs bg-slate-800 px-6 py-3 rounded-2xl border border-slate-700 hover:bg-blue-600 hover:text-white transition-all duration-300 font-black uppercase tracking-widest shadow-lg">
-                Kembali ke Live Dashboard
-            </a>
+            
+            <div class="flex gap-3">
+                <button onclick="downloadCSV()" class="text-[10px] bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-green-600 hover:text-white transition-all font-black uppercase tracking-widest shadow-lg">
+                    📥 Download CSV
+                </button>
+                <button onclick="downloadPDF()" class="text-[10px] bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-red-600 hover:text-white transition-all font-black uppercase tracking-widest shadow-lg">
+                    📄 Download PDF
+                </button>
+                <a href="index.html" class="text-[10px] bg-blue-600 px-4 py-2 rounded-xl text-white transition-all font-black uppercase tracking-widest shadow-lg">
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -35,7 +46,7 @@
 
         <div class="bg-slate-900/50 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-md">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table id="trade-table" class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-800/50 text-[10px] uppercase tracking-widest text-slate-500 font-black">
                             <th class="p-6">Timestamp / Asset</th>
@@ -45,46 +56,37 @@
                             <th class="p-6 text-right font-black">P/L Result</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="text-sm">
-                        </tbody>
+                    <tbody id="table-body" class="text-sm"></tbody>
                 </table>
             </div>
         </div>
-        <p id="loading" class="text-center mt-10 text-slate-600 animate-pulse text-xs font-bold uppercase tracking-widest">Sinkronisasi Data Simulator...</p>
     </div>
 
     <script>
+        let currentData = [];
+
         async function loadRekap() {
             try {
-                const res = await fetch('https://kisampurnaraga.pythonanywhere.com/get-backtest');
-                const data = await res.json();
+                const res = await fetch('https://kisampurnaraga.pythonanywhere.com/get-backtest?t=' + new Date().getTime());
+                currentData = await res.json();
                 const tbody = document.getElementById('table-body');
-                const loader = document.getElementById('loading');
                 
                 tbody.innerHTML = '';
-                loader.style.display = 'none';
-
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic font-bold">Belum ada sinyal yang dieksekusi oleh simulator.</td></tr>';
+                if (!currentData || currentData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic">No data available.</td></tr>';
                     return;
                 }
 
                 let totalPnl = 0;
                 let wins = 0;
 
-                data.forEach(item => {
+                currentData.forEach(item => {
                     const pnl = parseFloat(item.pnl || 0);
                     totalPnl += pnl;
-                    if(item.result === "PROFIT") wins++;
+                    if(item.result === "PROFIT" || pnl > 0) wins++;
 
-                    const resultClass = item.result === "PROFIT" 
-                        ? "text-green-500 font-black" 
-                        : "text-red-500 font-black";
+                    const resultClass = (item.result === "PROFIT" || pnl > 0) ? "text-green-500" : "text-red-500";
                     
-                    const typeClass = item.type === "BUY" 
-                        ? "bg-blue-900/30 text-blue-400 border-blue-800/50" 
-                        : "bg-orange-900/30 text-orange-400 border-orange-800/50";
-
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-800/50 hover:bg-white/5 transition duration-300">
                             <td class="p-6">
@@ -92,40 +94,51 @@
                                 <span class="font-mono text-[11px] text-slate-400">${item.timestamp}</span>
                             </td>
                             <td class="p-6">
-                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${typeClass}">${item.type}</span>
+                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${item.type === 'BUY' ? 'text-blue-400 border-blue-800' : 'text-orange-400 border-orange-800'}">${item.type}</span>
                             </td>
-                            <td class="p-6 font-mono font-bold text-slate-100">$${parseFloat(item.entry).toFixed(2)}</td>
-                            <td class="p-6 text-center">
-                                <div class="text-[9px] font-mono leading-relaxed">
-                                    <div class="text-red-400 opacity-60">SL: $${item.sl}</div>
-                                    <div class="text-green-400 opacity-60">TP: $${item.tp}</div>
-                                </div>
-                            </td>
-                            <td class="p-6 text-right">
-                                <div class="${resultClass} text-sm">${item.result}</div>
-                                <div class="text-[11px] font-mono ${pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
-                                    ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
-                                </div>
-                            </td>
+                            <td class="p-6 font-mono text-slate-100">$${item.entry}</td>
+                            <td class="p-6 text-center text-[10px] font-mono">SL: ${item.sl} | TP: ${item.tp}</td>
+                            <td class="p-6 text-right ${resultClass} font-black uppercase tracking-tighter">${item.result} ($${pnl.toFixed(2)})</td>
                         </tr>
                     `;
                 });
 
-                // Update Stats Cards
-                document.getElementById('total-trades').innerText = data.length;
-                document.getElementById('win-rate').innerText = ((wins / data.length) * 100).toFixed(1) + "%";
-                document.getElementById('total-pnl').innerText = (totalPnl >= 0 ? "+" : "") + "$" + totalPnl.toFixed(2);
-                document.getElementById('total-pnl').className = totalPnl >= 0 
-                    ? "text-3xl font-black text-green-500 italic" 
-                    : "text-3xl font-black text-red-500 italic";
-
-            } catch (err) {
-                document.getElementById('loading').innerText = "Gagal memuat data. Hubungkan API PythonAnywhere.";
-            }
+                document.getElementById('total-trades').innerText = currentData.length;
+                document.getElementById('win-rate').innerText = ((wins / currentData.length) * 100).toFixed(1) + "%";
+                document.getElementById('total-pnl').innerText = "$" + totalPnl.toFixed(2);
+            } catch (err) { console.error(err); }
         }
-        
-        // Refresh otomatis setiap 30 detik
-        setInterval(loadRekap, 30000);
+
+        // FUNGSI DOWNLOAD CSV
+        function downloadCSV() {
+            if (currentData.length === 0) return alert("Tidak ada data untuk diunduh!");
+            let csvContent = "data:text/csv;charset=utf-8,Timestamp,Pair,Type,Entry,SL,TP,Result,PnL\n";
+            currentData.forEach(r => {
+                csvContent += `${r.timestamp},${r.pair},${r.type},${r.entry},${r.sl},${r.tp},${r.result},${r.pnl}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Neuron_Report.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // FUNGSI DOWNLOAD PDF
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("NEURON AI - TRADING REPORT", 14, 15);
+            
+            const rows = currentData.map(r => [r.timestamp, r.pair, r.type, r.entry, r.result, r.pnl]);
+            doc.autoTable({
+                head: [['Date', 'Pair', 'Type', 'Entry', 'Result', 'P/L']],
+                body: rows,
+                startY: 25
+            });
+            doc.save("Neuron_Report.pdf");
+        }
+
         loadRekap();
     </script>
 </body>
