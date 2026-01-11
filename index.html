@@ -183,27 +183,29 @@
         syncDashboard();
     };
 
+    // FUNGSI UTAMA: Fetch Data mandiri agar tidak bentrok
     async function syncDashboard() {
         try {
-            // 1. Gold
+            // 1. Gold Status
             const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
             const dataGold = await resGold.json();
             if (dataGold.last_price > 0) priceDisplay.innerText = `$${dataGold.last_price}`;
             updateBtnState(buttons.gold, dataGold.running, "GOLD");
 
-            // 2. BTC
+            // 2. Cek Status BTC mandiri
             const resBtc = await fetch(`${API_BASE}/scan/btc?t=${Date.now()}`);
             const dataBtc = await resBtc.json();
             if (dataBtc.last_price > 0) document.getElementById('crypto-btc').innerText = `$${dataBtc.last_price.toLocaleString()}`;
+            // backend harus kirim data 'running' spesifik per koin
             updateBtnState(buttons.btc, dataBtc.running, "BTC");
 
-            // 3. ETH
+            // 3. Cek Status ETH mandiri
             const resEth = await fetch(`${API_BASE}/scan/eth?t=${Date.now()}`);
             const dataEth = await resEth.json();
             if (dataEth.last_price > 0) document.getElementById('crypto-eth').innerText = `$${dataEth.last_price.toLocaleString()}`;
             updateBtnState(buttons.eth, dataEth.running, "ETH");
 
-            // 4. SOL
+            // 4. Cek Status SOL mandiri
             const resSol = await fetch(`${API_BASE}/scan/sol?t=${Date.now()}`);
             const dataSol = await resSol.json();
             if (dataSol.last_price > 0) document.getElementById('crypto-sol').innerText = `$${dataSol.last_price.toLocaleString()}`;
@@ -211,6 +213,47 @@
 
             renderSignals();
         } catch (e) { console.error("Sync Error", e); }
+    }
+
+    // FUNGSI TOGGLE: Sekarang spesifik per tombol
+    async function toggleScanner(mode) {
+        const btn = buttons[mode];
+        if (!btn) return;
+
+        const isStopAction = btn.innerText.includes("STOP");
+        const action = isStopAction ? 'stop' : 'start';
+        
+        // Visual feedback hanya untuk tombol yang diklik
+        const originalText = btn.innerText;
+        btn.innerText = "WAIT...";
+        btn.style.opacity = "0.5";
+
+        try {
+            let endpoint = "";
+            if (mode === 'gold') {
+                endpoint = `scanner/${action}`;
+            } else {
+                // Kirim perintah ke endpoint crypto-scanner dengan parameter koin
+                endpoint = `crypto-scanner/${action}?coin=${mode}`;
+            }
+
+            const response = await fetch(`${API_BASE}/${endpoint}`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                console.log(`${mode} ${action} success`);
+            }
+        } catch (e) {
+            console.error(`Error toggling ${mode}`, e);
+        } finally {
+            // Beri jeda sedikit agar backend selesai proses sebelum sync ulang
+            setTimeout(() => {
+                btn.style.opacity = "1";
+                syncDashboard();
+            }, 2000);
+        }
     }
 
     function updateBtnState(btn, isRunning, label) {
@@ -257,20 +300,6 @@
                 `;
             });
         } catch (e) { console.log("Signal Error", e); }
-    }
-
-    async function toggleScanner(mode) {
-        const btn = buttons[mode];
-        const action = btn.innerText.includes("STOP") ? 'stop' : 'start';
-        btn.innerText = "WAIT...";
-
-        // Sesuaikan endpoint backend
-        let endpoint = "";
-        if (mode === 'gold') endpoint = `scanner/${action}`;
-        else endpoint = `crypto-scanner/${action}?coin=${mode}`; // Tambahkan param koin
-
-        await fetch(`${API_BASE}/${endpoint}`, { method: 'POST' });
-        setTimeout(syncDashboard, 1500);
     }
 
     setInterval(syncDashboard, 5000);
