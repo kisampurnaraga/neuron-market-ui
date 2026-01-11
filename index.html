@@ -96,158 +96,156 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
-        const btnControl = document.getElementById('btn-control');
-        const btnCrypto = document.getElementById('btn-crypto-control');
-        const priceDisplay = document.getElementById('neuron-price');
-        const priceLabel = document.getElementById('price-label');
+    const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
+    const btnControl = document.getElementById('btn-control');
+    const btnCrypto = document.getElementById('btn-crypto-control');
+    const priceDisplay = document.getElementById('neuron-price');
+    const priceLabel = document.getElementById('price-label');
 
-        // Variabel pelacak agar widget tidak reload terus menerus
-        let currentSymbol = ""; 
+    let currentSymbol = ""; 
 
-        // Render TradingView dengan pencegahan flicker
-        function loadChart(symbol = "OANDA:XAUUSD") {
-            if (currentSymbol === symbol) return; 
-            currentSymbol = symbol;
+    // Fungsi Render TradingView (Ditingkatkan)
+    function loadChart(symbol) {
+        // Konversi symbol sinyal ke format TradingView
+        let tvSymbol = symbol;
+        if (symbol === "XAUUSD") tvSymbol = "OANDA:XAUUSD";
+        if (symbol === "BTC") tvSymbol = "BINANCE:BTCUSDT";
+        if (symbol === "ETH") tvSymbol = "BINANCE:ETHUSDT";
+        if (symbol === "SOL") tvSymbol = "BINANCE:SOLUSDT";
 
-            new TradingView.widget({
-                "autosize": true, 
-                "symbol": symbol, 
-                "interval": "15",
-                "timezone": "Asia/Jakarta", 
-                "theme": "dark", 
-                "style": "1",
-                "locale": "en", 
-                "container_id": "tradingview_neuron",
-                "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"]
-            });
-        }
+        if (currentSymbol === tvSymbol) return; 
+        currentSymbol = tvSymbol;
 
-        // Inisialisasi awal
-        loadChart("OANDA:XAUUSD");
+        console.log("Switching Chart to:", tvSymbol);
 
-        // --- FITUR KLIK HARGA UNTUK GANTI CHART ---
-        // Pastikan ID ini sesuai dengan elemen HTML Bos
-        document.getElementById('crypto-btc')?.parentElement.addEventListener('click', () => loadChart("BINANCE:BTCUSDT"));
-        document.getElementById('crypto-eth')?.parentElement.addEventListener('click', () => loadChart("BINANCE:ETHUSDT"));
-        document.getElementById('crypto-sol')?.parentElement.addEventListener('click', () => loadChart("BINANCE:SOLUSDT"));
-        
-        // Klik Harga Utama di Header balik ke Gold
-        priceDisplay.addEventListener('click', () => loadChart("OANDA:XAUUSD"));
+        new TradingView.widget({
+            "autosize": true, 
+            "symbol": tvSymbol, 
+            "interval": "15",
+            "timezone": "Asia/Jakarta", 
+            "theme": "dark", 
+            "style": "1",
+            "locale": "en", 
+            "container_id": "tradingview_neuron",
+            "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"],
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+        });
+    }
 
-        async function syncDashboard() {
-            try {
-                // 1. Sync Gold Status & Price
-                const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
-                const dataGold = await resGold.json();
-                updateBtn(btnControl, dataGold.running, "GOLD");
-                
-                // 2. Sync Crypto Status & All Prices
-                const resCrypto = await fetch(`${API_BASE}/scan/crypto?t=${Date.now()}`);
-                const dataCrypto = await resCrypto.json();
-                updateBtn(btnCrypto, dataCrypto.running, "CRYPTO");
-
-                // Update Crypto Ticker Panel
-                if (dataCrypto.prices) {
-                    document.getElementById('crypto-btc').innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
-                    document.getElementById('crypto-eth').innerText = `$${dataCrypto.prices.ETH.toLocaleString()}`;
-                    document.getElementById('crypto-sol').innerText = `$${dataCrypto.prices.SOL.toLocaleString()}`;
-                }
-
-                // --- LOGIKA AUTO-SWITCH HARGA & CHART ---
-                if (dataGold.running) {
-                    priceDisplay.innerText = `$${dataGold.last_price}`;
-                    priceLabel.innerText = "XAUUSD LIVE";
-                    // Otomatis pindah chart ke Gold jika robot gold aktif
-                    loadChart("OANDA:XAUUSD");
-                } else if (dataCrypto.running && dataCrypto.prices) {
-                    priceDisplay.innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
-                    priceLabel.innerText = "BTCUSD LIVE";
-                    // Otomatis pindah chart ke BTC jika hanya robot crypto yang aktif
-                    loadChart("BINANCE:BTCUSDT");
-                }
-
-                renderSignals();
-            } catch (e) { console.error("Sync Error", e); }
-        }
-
-        function updateBtn(btn, isRunning, label) {
-            btn.innerText = isRunning ? `🛑 STOP ${label}` : `⚡ START ${label}`;
-            btn.className = isRunning 
-                ? "px-3 py-2 bg-red-900/20 text-red-500 border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-500 hover:text-white transition-all"
-                : "px-3 py-2 bg-green-900/20 text-green-500 border border-green-800 rounded-lg text-[9px] font-black hover:bg-green-500 hover:text-white transition-all";
-        }
-
-        async function renderSignals() {
-            try {
-                const [res1, res2] = await Promise.all([
-                    fetch(`${API_BASE}/get-active-trades?t=${Date.now()}`),
-                    fetch(`${API_BASE}/get-crypto-trades?t=${Date.now()}`)
-                ]);
-                const goldTrades = await res1.json();
-                const cryptoTrades = await res2.json();
-                
-                const allTrades = [...goldTrades, ...cryptoTrades];
-                const container = document.getElementById('active-trades-list');
-                
-                if (allTrades.length === 0) {
-                    container.innerHTML = '<p class="text-slate-600 italic text-[10px] animate-pulse">Waiting for Confluence Signal...</p>';
-                    return;
-                }
-
-                container.innerHTML = ''; 
-                allTrades.forEach(trade => {
-                    const typeClass = trade.type === 'BUY' ? "text-blue-400" : "text-orange-400";
-
-                    container.innerHTML += `
-                        <div class="bg-slate-800/60 p-5 rounded-3xl border border-slate-700/50 hover:border-blue-500 transition-all duration-300">
-                            <div class="flex justify-between items-start mb-3">
-                                <div onclick="loadChart('${trade.pair.includes('USD') ? 'BINANCE:'+trade.pair.replace('-','') : 'OANDA:XAUUSD'}')" class="cursor-pointer">
-                                    <span class="text-[9px] text-slate-500 font-black block uppercase">${trade.pair}</span>
-                                    <span class="${typeClass} font-black italic text-lg">${trade.type} ORDER</span>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[8px] text-slate-500 font-bold block uppercase">${trade.timestamp || 'Just Now'}</span>
-                                    <span class="text-blue-400 font-mono font-bold text-xs">SIGNAL ACTIVE</span>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2 bg-[#020617]/50 p-3 rounded-2xl border border-slate-800 mb-4 text-center">
-                                <div><p class="text-[7px] text-slate-500 font-bold">ENTRY</p><p class="text-[10px] text-white">${trade.entry}</p></div>
-                                <div><p class="text-[7px] text-green-500 font-bold">TP</p><p class="text-[10px] text-green-400">${trade.tp}</p></div>
-                                <div><p class="text-[7px] text-red-500 font-bold">SL</p><p class="text-[10px] text-red-400">${trade.sl}</p></div>
-                            </div>
-
-                            <button onclick="closeTrade('${trade.pair}')" class="w-full py-2 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white text-[9px] font-black rounded-xl border border-red-600/20 transition-all uppercase">
-                                ❌ Close Position
-                            </button>
-                        </div>
-                    `;
-                });
-            } catch (e) { console.log("Signal Fetch Error", e); }
-        }
-
-        async function closeTrade(pair) {
-            if(!confirm(`Close posisi ${pair}?`)) return;
-            await fetch(`${API_BASE}/close-trade`, { method: 'POST' });
-            setTimeout(syncDashboard, 500);
-        }
-
-        async function toggleScanner(mode) {
-            const btn = mode === 'gold' ? btnControl : btnCrypto;
-            const isRunning = btn.innerText.includes("STOP");
-            const action = isRunning ? 'stop' : 'start';
-            const endpoint = mode === 'gold' ? `/scanner/${action}` : `/crypto-scanner/${action}`;
-            
-            btn.innerText = "WAIT...";
-            try {
-                await fetch(`${API_BASE}${endpoint}`, { method: 'POST' });
-            } catch (err) { alert("Server Error!"); }
-            setTimeout(syncDashboard, 2000);
-        }
-
-        setInterval(syncDashboard, 5000);
+    // PAKSA LOAD AWAL
+    window.onload = () => {
+        loadChart("XAUUSD");
         syncDashboard();
+    };
+
+    // --- FITUR KLIK HARGA (DROPDOWN MANUAL) ---
+    // Mencari elemen berdasarkan teks di dalamnya (lebih aman)
+    document.body.addEventListener('click', function(e) {
+        if (e.target.closest('#crypto-btc') || e.target.innerText.includes('BITCOIN')) loadChart("BTC");
+        if (e.target.closest('#crypto-eth') || e.target.innerText.includes('ETHEREUM')) loadChart("ETH");
+        if (e.target.closest('#crypto-sol') || e.target.innerText.includes('SOLANA')) loadChart("SOL");
+        if (e.target.closest('#neuron-price')) loadChart("XAUUSD");
+    });
+
+    async function syncDashboard() {
+        try {
+            const [resGold, resCrypto] = await Promise.all([
+                fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`),
+                fetch(`${API_BASE}/scan/crypto?t=${Date.now()}`)
+            ]);
+            
+            const dataGold = await resGold.json();
+            const dataCrypto = await resCrypto.json();
+
+            updateBtn(btnControl, dataGold.running, "GOLD");
+            updateBtn(btnCrypto, dataCrypto.running, "CRYPTO");
+
+            if (dataCrypto.prices) {
+                document.getElementById('crypto-btc').innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
+                document.getElementById('crypto-eth').innerText = `$${dataCrypto.prices.ETH.toLocaleString()}`;
+                document.getElementById('crypto-sol').innerText = `$${dataCrypto.prices.SOL.toLocaleString()}`;
+            }
+
+            // Update Header Price (Prioritas Gold jika running)
+            if (dataGold.running && dataGold.last_price > 0) {
+                priceDisplay.innerText = `$${dataGold.last_price}`;
+                priceLabel.innerText = "XAUUSD LIVE";
+            } else if (dataCrypto.prices && dataCrypto.prices.BTC > 0) {
+                priceDisplay.innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
+                priceLabel.innerText = "BTCUSD LIVE";
+            }
+
+            renderSignals();
+        } catch (e) { console.error("Sync Error:", e); }
+    }
+
+    function updateBtn(btn, isRunning, label) {
+        btn.innerText = isRunning ? `🛑 STOP ${label}` : `⚡ START ${label}`;
+        btn.className = isRunning 
+            ? "px-3 py-2 bg-red-900/20 text-red-500 border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+            : "px-3 py-2 bg-green-900/20 text-green-500 border border-green-800 rounded-lg text-[9px] font-black hover:bg-green-500 hover:text-white transition-all cursor-pointer";
+    }
+
+    async function renderSignals() {
+        try {
+            const [res1, res2] = await Promise.all([
+                fetch(`${API_BASE}/get-active-trades?t=${Date.now()}`),
+                fetch(`${API_BASE}/get-crypto-trades?t=${Date.now()}`)
+            ]);
+            const goldTrades = await res1.json();
+            const cryptoTrades = await res2.json();
+            const allTrades = [...goldTrades, ...cryptoTrades];
+            const container = document.getElementById('active-trades-list');
+            
+            if (allTrades.length === 0) {
+                container.innerHTML = '<p class="text-slate-600 italic text-[10px] animate-pulse">Waiting for Confluence Signal...</p>';
+                return;
+            }
+
+            container.innerHTML = ''; 
+            allTrades.forEach(trade => {
+                const typeClass = trade.type === 'BUY' ? "text-blue-400" : "text-orange-400";
+                container.innerHTML += `
+                    <div onclick="loadChart('${trade.pair}')" class="bg-slate-800/60 p-5 rounded-3xl border border-slate-700/50 hover:border-blue-500 transition-all duration-300 cursor-pointer group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <span class="text-[9px] text-slate-500 font-black block uppercase">${trade.pair}</span>
+                                <span class="${typeClass} font-black italic text-lg group-hover:text-white">${trade.type} ORDER</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-blue-400 font-mono font-bold text-xs uppercase animate-pulse">Live</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 bg-[#020617]/50 p-3 rounded-2xl border border-slate-800 mb-4 text-center text-[10px]">
+                            <div><p class="text-[7px] text-slate-500 uppercase">Entry</p><p class="text-white">${trade.entry}</p></div>
+                            <div><p class="text-[7px] text-green-500 uppercase">TP</p><p class="text-green-400">${trade.tp}</p></div>
+                            <div><p class="text-[7px] text-red-500 uppercase">SL</p><p class="text-red-400">${trade.sl}</p></div>
+                        </div>
+                        <button onclick="event.stopPropagation(); closeTrade('${trade.pair}')" class="w-full py-2 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white text-[9px] font-black rounded-xl border border-red-600/20 transition-all uppercase">
+                            ❌ Close Position
+                        </button>
+                    </div>
+                `;
+            });
+        } catch (e) { console.log("Signal Fetch Error", e); }
+    }
+
+    async function closeTrade(pair) {
+        if(!confirm(`Close posisi ${pair}?`)) return;
+        await fetch(`${API_BASE}/close-trade`, { method: 'POST' });
+        syncDashboard();
+    }
+
+    async function toggleScanner(mode) {
+        const btn = mode === 'gold' ? btnControl : btnCrypto;
+        const action = btn.innerText.includes("STOP") ? 'stop' : 'start';
+        btn.innerText = "WAIT...";
+        await fetch(`${API_BASE}/${mode === 'gold' ? 'scanner' : 'crypto-scanner'}/${action}`, { method: 'POST' });
+        setTimeout(syncDashboard, 2000);
+    }
+
+    setInterval(syncDashboard, 5000);
 </script>
 </body>
 </html>
