@@ -9,13 +9,30 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         .font-mono-neuron { font-family: 'JetBrains Mono', monospace; }
         .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-        .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; }
-        .crypto-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        /* Style Dropdown Custom */
-        .dropdown-content { display: none; position: absolute; background-color: #0f172a; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 1000; border-radius: 1rem; border: 1px solid #1e293b; overflow: hidden; }
-        .dropdown-content button { color: #94a3b8; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; font-size: 11px; font-weight: bold; border-bottom: 1px solid #1e293b; }
+        .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; position: relative; z-index: 10; }
+        .crypto-card:hover { border-color: #3b82f6; transform: translateY(-2px); z-index: 11; }
+        
+        /* FIX: Dropdown Custom dengan Z-Index Tertinggi */
+        .dropdown-content { 
+            display: none; 
+            position: absolute; 
+            background-color: #0f172a; 
+            min-width: 180px; 
+            box-shadow: 0px 20px 50px rgba(0,0,0,0.8); 
+            z-index: 9999 !important; /* Memastikan di atas segalanya */
+            border-radius: 1rem; 
+            border: 1px solid #334155; 
+            overflow: hidden;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+        }
+        .dropdown-content button { color: #94a3b8; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; font-size: 11px; font-weight: bold; border-bottom: 1px solid #1e293b; transition: all 0.2s; }
         .dropdown-content button:hover { background-color: #3b82f6; color: white; }
         .dropdown:hover .dropdown-content { display: block; }
+        
+        /* Mencegah header memotong dropdown */
+        header { overflow: visible !important; position: relative; z-index: 50; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 min-h-screen p-4 md:p-10 font-sans">
@@ -27,14 +44,14 @@
                     <h1 class="text-3xl font-black tracking-tighter text-blue-500 italic uppercase">Neuron AI</h1>
                     <div class="dropdown relative mt-1">
                         <button class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2 hover:border-blue-500 transition-all">
-                            <span id="current-asset-label" class="text-[10px] font-black text-white uppercase italic">GOLD (XAUUSD)</span>
+                            <span id="current-asset-label" class="text-[10px] font-black text-white uppercase italic tracking-widest">GOLD (XAUUSD)</span>
                             <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="dropdown-content">
-                            <button onclick="switchAsset('XAUUSD')">GOLD / XAUUSD</button>
-                            <button onclick="switchAsset('BTC')">BITCOIN / BTC</button>
-                            <button onclick="switchAsset('ETH')">ETHEREUM / ETH</button>
-                            <button onclick="switchAsset('SOL')">SOLANA / SOL</button>
+                            <button onclick="switchAsset('XAUUSD')">🌕 GOLD / XAUUSD</button>
+                            <button onclick="switchAsset('BTC')">₿ BITCOIN / BTC</button>
+                            <button onclick="switchAsset('ETH')">♦ ETHEREUM / ETH</button>
+                            <button onclick="switchAsset('SOL')">◎ SOLANA / SOL</button>
                         </div>
                     </div>
                 </div>
@@ -55,31 +72,31 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 relative z-10">
             <div onclick="switchAsset('BTC')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                    <p class="text-[9px] font-bold text-orange-500 uppercase">Bitcoin</p>
+                    <p class="text-[9px] font-bold text-orange-500 uppercase tracking-tighter">Bitcoin</p>
                     <p id="crypto-btc" class="text-lg font-mono-neuron text-white">$---</p>
                 </div>
                 <span class="text-slate-800 font-black">BTC</span>
             </div>
             <div onclick="switchAsset('ETH')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                    <p class="text-[9px] font-bold text-blue-400 uppercase">Ethereum</p>
+                    <p class="text-[9px] font-bold text-blue-400 uppercase tracking-tighter">Ethereum</p>
                     <p id="crypto-eth" class="text-lg font-mono-neuron text-white">$---</p>
                 </div>
                 <span class="text-slate-800 font-black">ETH</span>
             </div>
             <div onclick="switchAsset('SOL')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                    <p class="text-[9px] font-bold text-purple-500 uppercase">Solana</p>
+                    <p class="text-[9px] font-bold text-purple-500 uppercase tracking-tighter">Solana</p>
                     <p id="crypto-sol" class="text-lg font-mono-neuron text-white">$---</p>
                 </div>
                 <span class="text-slate-800 font-black">SOL</span>
             </div>
         </div>
 
-        <div class="bg-slate-900/40 p-2 md:p-4 rounded-[2rem] border border-slate-800 shadow-inner">
+        <div class="bg-slate-900/40 p-2 md:p-4 rounded-[2rem] border border-slate-800 shadow-inner relative z-0">
             <div id="tradingview_neuron" class="h-[500px] w-full rounded-2xl overflow-hidden border border-slate-800"></div>
         </div>
 
@@ -88,7 +105,7 @@
                 <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-slate-800">
                     <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">System Intelligence</h3>
                     <p class="text-[11px] text-slate-500 leading-relaxed uppercase">
-                        💡 <b>Click to switch:</b> Klik kotak harga Crypto atau menu dropdown di atas untuk mengganti tampilan chart secara instan.
+                        💡 <b>Navigation:</b> Dropdown kini memiliki prioritas visual tertinggi. Gunakan untuk beralih instrumen tanpa lag.
                     </p>
                 </div>
             </div>
@@ -98,7 +115,7 @@
                     <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                     Signals
                 </h3>
-                <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 font-mono-neuron">
                     <p class="text-slate-600 italic text-[10px]">Syncing...</p>
                 </div>
             </div>
@@ -115,7 +132,6 @@
 
     let currentSymbol = ""; 
 
-    // FUNGSI PINDAH ASSET (Dropdown & Klik)
     function switchAsset(asset) {
         let tvSymbol = "";
         let displayLabel = "";
@@ -138,7 +154,7 @@
         currentSymbol = tvSymbol;
         assetLabel.innerText = displayLabel;
 
-        document.getElementById('tradingview_neuron').innerHTML = ""; // Clear
+        document.getElementById('tradingview_neuron').innerHTML = ""; 
         
         new TradingView.widget({
             "autosize": true,
@@ -151,12 +167,11 @@
             "container_id": "tradingview_neuron",
             "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"],
             "hide_side_toolbar": false,
-            "allow_symbol_change": false, // Lock agar user pakai dropdown kita
+            "allow_symbol_change": false,
             "save_image": false
         });
     }
 
-    // Load Awal
     window.onload = () => {
         switchAsset("XAUUSD");
         syncDashboard();
@@ -172,16 +187,13 @@
             const dataGold = await resGold.json();
             const dataCrypto = await resCrypto.json();
 
-            // Status Tombol
             updateBtn(btnControl, dataGold.running, "GOLD");
             updateBtn(btnCrypto, dataCrypto.running, "CRYPTO");
 
-            // Header Selalu GOLD
             if (dataGold.last_price > 0) {
                 priceDisplay.innerText = `$${dataGold.last_price}`;
             }
 
-            // Ticker Crypto
             if (dataCrypto.prices) {
                 document.getElementById('crypto-btc').innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
                 document.getElementById('crypto-eth').innerText = `$${dataCrypto.prices.ETH.toLocaleString()}`;
