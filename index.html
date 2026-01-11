@@ -102,16 +102,38 @@
         const priceDisplay = document.getElementById('neuron-price');
         const priceLabel = document.getElementById('price-label');
 
-        // Render TradingView
+        // Variabel pelacak agar widget tidak reload terus menerus
+        let currentSymbol = ""; 
+
+        // Render TradingView dengan pencegahan flicker
         function loadChart(symbol = "OANDA:XAUUSD") {
+            if (currentSymbol === symbol) return; 
+            currentSymbol = symbol;
+
             new TradingView.widget({
-                "autosize": true, "symbol": symbol, "interval": "15",
-                "timezone": "Asia/Jakarta", "theme": "dark", "style": "1",
-                "locale": "en", "container_id": "tradingview_neuron",
+                "autosize": true, 
+                "symbol": symbol, 
+                "interval": "15",
+                "timezone": "Asia/Jakarta", 
+                "theme": "dark", 
+                "style": "1",
+                "locale": "en", 
+                "container_id": "tradingview_neuron",
                 "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"]
             });
         }
-        loadChart();
+
+        // Inisialisasi awal
+        loadChart("OANDA:XAUUSD");
+
+        // --- FITUR KLIK HARGA UNTUK GANTI CHART ---
+        // Pastikan ID ini sesuai dengan elemen HTML Bos
+        document.getElementById('crypto-btc')?.parentElement.addEventListener('click', () => loadChart("BINANCE:BTCUSDT"));
+        document.getElementById('crypto-eth')?.parentElement.addEventListener('click', () => loadChart("BINANCE:ETHUSDT"));
+        document.getElementById('crypto-sol')?.parentElement.addEventListener('click', () => loadChart("BINANCE:SOLUSDT"));
+        
+        // Klik Harga Utama di Header balik ke Gold
+        priceDisplay.addEventListener('click', () => loadChart("OANDA:XAUUSD"));
 
         async function syncDashboard() {
             try {
@@ -132,13 +154,17 @@
                     document.getElementById('crypto-sol').innerText = `$${dataCrypto.prices.SOL.toLocaleString()}`;
                 }
 
-                // Update Main Engine Display (Prioritas Gold)
-                if (dataGold.last_price > 0) {
+                // --- LOGIKA AUTO-SWITCH HARGA & CHART ---
+                if (dataGold.running) {
                     priceDisplay.innerText = `$${dataGold.last_price}`;
                     priceLabel.innerText = "XAUUSD LIVE";
-                } else if (dataCrypto.prices && dataCrypto.prices.BTC > 0) {
+                    // Otomatis pindah chart ke Gold jika robot gold aktif
+                    loadChart("OANDA:XAUUSD");
+                } else if (dataCrypto.running && dataCrypto.prices) {
                     priceDisplay.innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
                     priceLabel.innerText = "BTCUSD LIVE";
+                    // Otomatis pindah chart ke BTC jika hanya robot crypto yang aktif
+                    loadChart("BINANCE:BTCUSDT");
                 }
 
                 renderSignals();
@@ -176,7 +202,7 @@
                     container.innerHTML += `
                         <div class="bg-slate-800/60 p-5 rounded-3xl border border-slate-700/50 hover:border-blue-500 transition-all duration-300">
                             <div class="flex justify-between items-start mb-3">
-                                <div>
+                                <div onclick="loadChart('${trade.pair.includes('USD') ? 'BINANCE:'+trade.pair.replace('-','') : 'OANDA:XAUUSD'}')" class="cursor-pointer">
                                     <span class="text-[9px] text-slate-500 font-black block uppercase">${trade.pair}</span>
                                     <span class="${typeClass} font-black italic text-lg">${trade.type} ORDER</span>
                                 </div>
@@ -203,9 +229,7 @@
 
         async function closeTrade(pair) {
             if(!confirm(`Close posisi ${pair}?`)) return;
-            // Gunakan endpoint yang sesuai
-            const endpoint = (pair === "BTC" || pair === "ETH" || pair === "SOL") ? '/close-trade' : '/close-trade';
-            await fetch(`${API_BASE}${endpoint}`, { method: 'POST' });
+            await fetch(`${API_BASE}/close-trade`, { method: 'POST' });
             setTimeout(syncDashboard, 500);
         }
 
@@ -222,9 +246,8 @@
             setTimeout(syncDashboard, 2000);
         }
 
-        // Interval Sync lebih cepat agar harga real-time (5 detik)
         setInterval(syncDashboard, 5000);
         syncDashboard();
-    </script>
+</script>
 </body>
 </html>

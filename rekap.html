@@ -7,40 +7,47 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-6 md:p-10 font-sans">
+<body class="bg-[#020617] text-slate-300 p-4 md:p-10 font-sans min-h-screen">
     <div class="max-w-6xl mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-blue-500 italic uppercase">History Backtest</h1>
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Neuron AI Simulator Performance</p>
+                <h1 class="text-3xl font-black text-blue-500 italic uppercase tracking-tighter">History Backtest</h1>
+                <p class="text-[10px] text-slate-500 uppercase tracking-[0.3em] mt-1 font-bold">Multi-Engine Performance Report</p>
             </div>
             
-            <div class="flex gap-3">
-                <button onclick="downloadCSV()" class="text-[10px] bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-green-600 hover:text-white transition-all font-black uppercase tracking-widest shadow-lg">
-                    📥 Download CSV
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="downloadCSV()" class="text-[9px] bg-slate-800/50 hover:bg-green-600/20 hover:text-green-500 border border-slate-700 hover:border-green-600/50 px-4 py-2 rounded-xl transition-all font-black uppercase tracking-widest shadow-lg">
+                    📥 CSV
                 </button>
-                <button onclick="downloadPDF()" class="text-[10px] bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 hover:bg-red-600 hover:text-white transition-all font-black uppercase tracking-widest shadow-lg">
-                    📄 Download PDF
+                <button onclick="downloadPDF()" class="text-[9px] bg-slate-800/50 hover:bg-red-600/20 hover:text-red-500 border border-slate-700 hover:border-red-600/50 px-4 py-2 rounded-xl transition-all font-black uppercase tracking-widest shadow-lg">
+                    📄 PDF
                 </button>
-                <a href="index.html" class="text-[10px] bg-blue-600 px-4 py-2 rounded-xl text-white transition-all font-black uppercase tracking-widest shadow-lg">
+                <a href="index.html" class="text-[9px] bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl text-white transition-all font-black uppercase tracking-widest shadow-lg flex items-center">
                     Kembali
                 </a>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Total Trades</p>
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-md">
+                <p class="text-[9px] text-slate-500 uppercase font-bold mb-1 tracking-widest">Total Executions</p>
                 <h3 id="total-trades" class="text-3xl font-black text-white italic">0</h3>
             </div>
-            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Win Rate (%)</p>
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-md">
+                <p class="text-[9px] text-slate-500 uppercase font-bold mb-1 tracking-widest">Win Rate Percentage</p>
                 <h3 id="win-rate" class="text-3xl font-black text-blue-500 italic">0%</h3>
             </div>
-            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-sm">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tighter">Total Akumulasi P/L</p>
-                <h3 id="total-pnl" class="text-3xl font-black text-green-500 italic">$0.00</h3>
+            <div class="bg-slate-900/80 p-6 rounded-[2rem] border border-slate-800 shadow-xl backdrop-blur-md">
+                <p class="text-[9px] text-slate-500 uppercase font-bold mb-1 tracking-widest">Net Profit/Loss</p>
+                <h3 id="total-pnl" class="text-3xl font-black italic">--</h3>
             </div>
         </div>
 
@@ -48,74 +55,88 @@
             <div class="overflow-x-auto">
                 <table id="trade-table" class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-800/50 text-[10px] uppercase tracking-widest text-slate-500 font-black">
-                            <th class="p-6">Timestamp / Asset</th>
-                            <th class="p-6">Type</th>
-                            <th class="p-6">Entry</th>
-                            <th class="p-6 text-center">Target (SL / TP)</th>
-                            <th class="p-6 text-right font-black">P/L Result</th>
+                        <tr class="bg-slate-800/30 text-[9px] uppercase tracking-[0.2em] text-slate-500 font-black">
+                            <th class="p-6">Timestamp & Asset</th>
+                            <th class="p-6">Strategy Type</th>
+                            <th class="p-6">Entry Price</th>
+                            <th class="p-6 text-center">Execution Target</th>
+                            <th class="p-6 text-right">PnL Result</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="text-sm"></tbody>
+                    <tbody id="table-body" class="text-sm">
+                        <tr><td colspan="5" class="p-20 text-center text-slate-600 italic animate-pulse tracking-widest uppercase text-[10px]">Connecting to Neural Network...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
+        const API_BASE = 'https://kisampurnaraga.pythonanywhere.com';
         let currentData = [];
 
         async function loadRekap() {
             try {
-                const res = await fetch('https://kisampurnaraga.pythonanywhere.com/get-backtest?t=' + new Date().getTime());
+                const res = await fetch(`${API_BASE}/get-backtest?t=${Date.now()}`);
                 currentData = await res.json();
                 const tbody = document.getElementById('table-body');
                 
-                tbody.innerHTML = '';
                 if (!currentData || currentData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic">No data available.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic">No historical data found.</td></tr>';
                     return;
                 }
 
                 let totalPnl = 0;
                 let wins = 0;
+                let html = '';
 
                 currentData.forEach(item => {
-                    // 1. Pastikan PNL adalah angka
                     const pnl = parseFloat(item.pnl || 0);
                     totalPnl += pnl;
 
-                    // 2. Logika Menentukan Menang (Win)
-                    // Cek berdasarkan tulisan "PROFIT" atau jika PNL-nya positif
                     const isWin = (item.result === "PROFIT" || pnl > 0);
                     if (isWin) wins++;
 
-                    // 3. Tentukan Warna (Hijau untuk Profit, Merah untuk Loss)
-                    const resultClass = isWin ? "text-green-500" : "text-red-500";
+                    const resultColor = isWin ? "text-green-500" : "text-red-500";
+                    const pnlColor = pnl >= 0 ? "text-green-600" : "text-red-600";
                     
-                    // 4. Warna Label Tipe Order
-                    const typeClass = item.type === 'BUY' 
+                    const typeClass = item.type.toUpperCase() === 'BUY' 
                         ? 'text-blue-400 border-blue-800 bg-blue-900/20' 
                         : 'text-orange-400 border-orange-800 bg-orange-900/20';
 
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-800/50 hover:bg-white/5 transition duration-300">
+                    // Cek Asset icon
+                    const asset = item.pair || 'XAUUSD';
+                    const isCrypto = asset.includes('-') || asset === 'BTC' || asset === 'ETH' || asset === 'SOL';
+
+                    html += `
+                        <tr class="border-b border-slate-800/40 hover:bg-white/5 transition duration-300">
                             <td class="p-6">
-                                <span class="text-[10px] text-slate-500 block uppercase font-black tracking-widest">${item.pair || 'XAUUSD'}</span>
-                                <span class="font-mono text-[11px] text-slate-400">${item.timestamp || '-'}</span>
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-white font-black uppercase tracking-tighter flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full ${isCrypto ? 'bg-orange-500' : 'bg-yellow-500'}"></span>
+                                        ${asset}
+                                    </span>
+                                    <span class="font-mono text-[9px] text-slate-500 mt-1">${item.timestamp || '-'}</span>
+                                </div>
                             </td>
                             <td class="p-6">
-                                <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${typeClass}">${item.type || 'SELL'}</span>
+                                <span class="px-3 py-1 rounded-lg text-[8px] font-black border uppercase tracking-tighter ${typeClass}">
+                                    ${item.type}
+                                </span>
                             </td>
-                            <td class="p-6 font-mono text-slate-100 font-bold">$${parseFloat(item.entry || 0).toFixed(2)}</td>
-                            <td class="p-6 text-center text-[10px] font-mono text-slate-500">
-                                <span class="text-red-900/80">SL: ${item.sl}</span> | <span class="text-green-900/80">TP: ${item.tp}</span>
+                            <td class="p-6 font-mono text-slate-300 font-bold">$${parseFloat(item.entry || 0).toLocaleString()}</td>
+                            <td class="p-6 text-center text-[9px] font-mono">
+                                <div class="flex justify-center gap-2">
+                                    <span class="text-red-500/50">SL: ${item.sl}</span>
+                                    <span class="text-slate-700">|</span>
+                                    <span class="text-green-500/50">TP: ${item.tp}</span>
+                                </div>
                             </td>
                             <td class="p-6 text-right">
-                                <div class="${resultClass} font-black uppercase tracking-tighter text-sm">
+                                <div class="${resultColor} font-black uppercase tracking-tighter text-[11px]">
                                     ${item.result || (pnl > 0 ? 'PROFIT' : 'LOSS')}
                                 </div>
-                                <div class="font-mono text-[11px] ${pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                <div class="font-mono text-[10px] font-bold ${pnlColor}">
                                     ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
                                 </div>
                             </td>
@@ -123,47 +144,62 @@
                     `;
                 });
 
-                document.getElementById('total-trades').innerText = currentData.length;
-                document.getElementById('win-rate').innerText = ((wins / currentData.length) * 100).toFixed(1) + "%";
-                document.getElementById('total-pnl').innerText = "$" + totalPnl.toFixed(2);
-            } catch (err) { console.error(err); }
+                tbody.innerHTML = html;
+
+                // Update Stats
+                const totalTrades = currentData.length;
+                const winRate = ((wins / totalTrades) * 100).toFixed(1);
+                
+                document.getElementById('total-trades').innerText = totalTrades;
+                document.getElementById('win-rate').innerText = winRate + "%";
+                
+                const pnlElement = document.getElementById('total-pnl');
+                pnlElement.innerText = (totalPnl >= 0 ? "+$" : "-$") + Math.abs(totalPnl).toFixed(2);
+                pnlElement.className = `text-3xl font-black italic ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`;
+
+            } catch (err) { 
+                console.error("Fetch Error:", err);
+            }
         }
 
-        // FUNGSI DOWNLOAD CSV
         function downloadCSV() {
-            if (currentData.length === 0) return alert("Tidak ada data untuk diunduh!");
-            let csvContent = "data:text/csv;charset=utf-8,Timestamp,Pair,Type,Entry,SL,TP,Result,PnL\n";
-            currentData.forEach(r => {
-                csvContent += `${r.timestamp},${r.pair},${r.type},${r.entry},${r.sl},${r.tp},${r.result},${r.pnl}\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
+            if (currentData.length === 0) return;
+            const headers = ["Timestamp", "Pair", "Type", "Entry", "SL", "TP", "Result", "PnL"];
+            const rows = currentData.map(r => [r.timestamp, r.pair, r.type, r.entry, r.sl, r.tp, r.result, r.pnl]);
+            
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" 
+                             + rows.map(e => e.join(",")).join("\n");
+            
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Neuron_Report.csv");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `Neuron_Report_${new Date().toLocaleDateString()}.csv`);
             document.body.appendChild(link);
             link.click();
         }
 
-        // FUNGSI DOWNLOAD PDF
         function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text("NEURON AI - TRADING REPORT", 14, 15);
+            doc.setFontSize(18);
+            doc.text("NEURON AI - PERFORMANCE REPORT", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
             
             const rows = currentData.map(r => [r.timestamp, r.pair, r.type, r.entry, r.result, r.pnl]);
             doc.autoTable({
-                head: [['Date', 'Pair', 'Type', 'Entry', 'Result', 'P/L']],
+                head: [['Date', 'Asset', 'Type', 'Entry', 'Result', 'PnL']],
                 body: rows,
-                startY: 25
+                startY: 35,
+                theme: 'striped',
+                headStyles: { fillColor: [30, 41, 59] }
             });
-            doc.save("Neuron_Report.pdf");
+            doc.save("Neuron_Backtest_Report.pdf");
         }
 
-        // Jalankan saat pertama kali buka
+        // Initial Load
         loadRekap();
-
-        // Tambahkan ini agar otomatis update tiap 5 detik tanpa refresh halaman
-        setInterval(loadRekap, 5000);
+        // Auto Refresh data every 10 seconds
+        setInterval(loadRekap, 10000);
     </script>
 </body>
 </html>
