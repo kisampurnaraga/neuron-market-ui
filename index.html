@@ -9,7 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         .font-mono-neuron { font-family: 'JetBrains Mono', monospace; }
         .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-        .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; position: relative; z-index: 10; }
+        .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; position: relative; z-index: 10; border: 1px solid #1e293b; }
         .crypto-card:hover { border-color: #3b82f6; transform: translateY(-2px); z-index: 11; }
         
         .dropdown-content { 
@@ -61,9 +61,11 @@
                     <span id="neuron-price" class="text-xl font-mono-neuron font-bold text-blue-400 glow-text">$0000.00</span>
                 </div>
 
-                <div class="flex gap-2">
-                    <button id="btn-control" onclick="toggleScanner('gold')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase">Check Gold</button>
-                    <button id="btn-crypto-control" onclick="toggleScanner('crypto')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase">Check Crypto</button>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button id="btn-gold" onclick="toggleScanner('gold')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase whitespace-nowrap">Check Gold</button>
+                    <button id="btn-btc" onclick="toggleScanner('btc')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-orange-600 transition-all uppercase whitespace-nowrap">Start BTC</button>
+                    <button id="btn-eth" onclick="toggleScanner('eth')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase whitespace-nowrap">Start ETH</button>
+                    <button id="btn-sol" onclick="toggleScanner('sol')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-purple-600 transition-all uppercase whitespace-nowrap">Start SOL</button>
                 </div>
 
                 <a href="rekap.html" class="px-4 py-2 bg-slate-800 hover:bg-blue-600 text-slate-100 text-[10px] font-black rounded-xl border border-slate-700 transition-all uppercase">📊 Rekap</a>
@@ -71,21 +73,21 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 relative z-10">
-            <div onclick="switchAsset('BTC')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div onclick="switchAsset('BTC')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
                 <div>
                     <p class="text-[9px] font-bold text-orange-500 uppercase tracking-tighter">Bitcoin</p>
                     <p id="crypto-btc" class="text-lg font-mono-neuron text-white">$---</p>
                 </div>
                 <span class="text-slate-800 font-black">BTC</span>
             </div>
-            <div onclick="switchAsset('ETH')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div onclick="switchAsset('ETH')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
                 <div>
                     <p class="text-[9px] font-bold text-blue-400 uppercase tracking-tighter">Ethereum</p>
                     <p id="crypto-eth" class="text-lg font-mono-neuron text-white">$---</p>
                 </div>
                 <span class="text-slate-800 font-black">ETH</span>
             </div>
-            <div onclick="switchAsset('SOL')" class="crypto-card p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div onclick="switchAsset('SOL')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
                 <div>
                     <p class="text-[9px] font-bold text-purple-500 uppercase tracking-tighter">Solana</p>
                     <p id="crypto-sol" class="text-lg font-mono-neuron text-white">$---</p>
@@ -103,7 +105,7 @@
                 <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-slate-800">
                     <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">System Intelligence</h3>
                     <p class="text-[11px] text-slate-500 leading-relaxed uppercase">
-                        💡 <b>Navigation:</b> Dropdown dan Kartu Crypto kini menggunakan <i>Single Asset Fetching</i> untuk mencegah backend crash.
+                        💡 <b>Navigation:</b> Setiap Engine (BTC, ETH, SOL) kini memiliki tombol kontrol mandiri untuk stabilitas scanning maksimal.
                     </p>
                 </div>
             </div>
@@ -113,7 +115,7 @@
                     <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                     Signals
                 </h3>
-                <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 font-mono-neuron">
+                <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 font-mono-neuron text-white">
                     <p class="text-slate-600 italic text-[10px]">Syncing...</p>
                 </div>
             </div>
@@ -125,8 +127,14 @@
     const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
     const priceDisplay = document.getElementById('neuron-price');
     const assetLabel = document.getElementById('current-asset-label');
-    const btnControl = document.getElementById('btn-control');
-    const btnCrypto = document.getElementById('btn-crypto-control');
+    
+    // Objek Tombol
+    const buttons = {
+        gold: document.getElementById('btn-gold'),
+        btc: document.getElementById('btn-btc'),
+        eth: document.getElementById('btn-eth'),
+        sol: document.getElementById('btn-sol')
+    };
 
     let currentSymbol = ""; 
 
@@ -175,45 +183,42 @@
         syncDashboard();
     };
 
-    // FUNGSI UTAMA: Fetch Data Per Aset agar Backend Ringan
     async function syncDashboard() {
         try {
-            // 1. Fetch Gold & Status
+            // 1. Gold
             const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
             const dataGold = await resGold.json();
-            
             if (dataGold.last_price > 0) priceDisplay.innerText = `$${dataGold.last_price}`;
-            updateBtn(btnControl, dataGold.running, "GOLD");
+            updateBtnState(buttons.gold, dataGold.running, "GOLD");
 
-            // 2. Fetch BTC Secara Mandiri
-            fetch(`${API_BASE}/scan/btc?t=${Date.now()}`)
-                .then(r => r.json())
-                .then(d => { if(d.last_price > 0) document.getElementById('crypto-btc').innerText = `$${d.last_price.toLocaleString()}`; });
+            // 2. BTC
+            const resBtc = await fetch(`${API_BASE}/scan/btc?t=${Date.now()}`);
+            const dataBtc = await resBtc.json();
+            if (dataBtc.last_price > 0) document.getElementById('crypto-btc').innerText = `$${dataBtc.last_price.toLocaleString()}`;
+            updateBtnState(buttons.btc, dataBtc.running, "BTC");
 
-            // 3. Fetch ETH Secara Mandiri
-            fetch(`${API_BASE}/scan/eth?t=${Date.now()}`)
-                .then(r => r.json())
-                .then(d => { if(d.last_price > 0) document.getElementById('crypto-eth').innerText = `$${d.last_price.toLocaleString()}`; });
+            // 3. ETH
+            const resEth = await fetch(`${API_BASE}/scan/eth?t=${Date.now()}`);
+            const dataEth = await resEth.json();
+            if (dataEth.last_price > 0) document.getElementById('crypto-eth').innerText = `$${dataEth.last_price.toLocaleString()}`;
+            updateBtnState(buttons.eth, dataEth.running, "ETH");
 
-            // 4. Fetch SOL Secara Mandiri
-            fetch(`${API_BASE}/scan/sol?t=${Date.now()}`)
-                .then(r => r.json())
-                .then(d => { if(d.last_price > 0) document.getElementById('crypto-sol').innerText = `$${d.last_price.toLocaleString()}`; });
-
-            // 5. Cek Status Global Crypto (Heartbeat)
-            fetch(`${API_BASE}/scan/crypto?t=${Date.now()}`)
-                .then(r => r.json())
-                .then(d => updateBtn(btnCrypto, d.running, "CRYPTO"));
+            // 4. SOL
+            const resSol = await fetch(`${API_BASE}/scan/sol?t=${Date.now()}`);
+            const dataSol = await resSol.json();
+            if (dataSol.last_price > 0) document.getElementById('crypto-sol').innerText = `$${dataSol.last_price.toLocaleString()}`;
+            updateBtnState(buttons.sol, dataSol.running, "SOL");
 
             renderSignals();
         } catch (e) { console.error("Sync Error", e); }
     }
 
-    function updateBtn(btn, isRunning, label) {
+    function updateBtnState(btn, isRunning, label) {
+        if (!btn) return;
         btn.innerText = isRunning ? `🛑 STOP ${label}` : `⚡ START ${label}`;
         btn.className = isRunning 
-            ? "px-3 py-2 bg-red-900/20 text-red-500 border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-500 hover:text-white transition-all cursor-pointer uppercase"
-            : "px-3 py-2 bg-green-900/20 text-green-500 border border-green-800 rounded-lg text-[9px] font-black hover:bg-green-500 hover:text-white transition-all cursor-pointer uppercase";
+            ? "px-3 py-2 bg-red-900/20 text-red-500 border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-500 hover:text-white transition-all cursor-pointer uppercase whitespace-nowrap"
+            : "px-3 py-2 bg-green-900/20 text-green-500 border border-green-800 rounded-lg text-[9px] font-black hover:bg-green-500 hover:text-white transition-all cursor-pointer uppercase whitespace-nowrap";
     }
 
     async function renderSignals() {
@@ -255,10 +260,16 @@
     }
 
     async function toggleScanner(mode) {
-        const btn = mode === 'gold' ? btnControl : btnCrypto;
+        const btn = buttons[mode];
         const action = btn.innerText.includes("STOP") ? 'stop' : 'start';
         btn.innerText = "WAIT...";
-        await fetch(`${API_BASE}/${mode === 'gold' ? 'scanner' : 'crypto-scanner'}/${action}`, { method: 'POST' });
+
+        // Sesuaikan endpoint backend
+        let endpoint = "";
+        if (mode === 'gold') endpoint = `scanner/${action}`;
+        else endpoint = `crypto-scanner/${action}?coin=${mode}`; // Tambahkan param koin
+
+        await fetch(`${API_BASE}/${endpoint}`, { method: 'POST' });
         setTimeout(syncDashboard, 1500);
     }
 
