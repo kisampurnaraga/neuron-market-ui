@@ -12,14 +12,13 @@
         .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; position: relative; z-index: 10; }
         .crypto-card:hover { border-color: #3b82f6; transform: translateY(-2px); z-index: 11; }
         
-        /* FIX: Dropdown Custom dengan Z-Index Tertinggi */
         .dropdown-content { 
             display: none; 
             position: absolute; 
             background-color: #0f172a; 
             min-width: 180px; 
             box-shadow: 0px 20px 50px rgba(0,0,0,0.8); 
-            z-index: 9999 !important; /* Memastikan di atas segalanya */
+            z-index: 9999 !important; 
             border-radius: 1rem; 
             border: 1px solid #334155; 
             overflow: hidden;
@@ -31,7 +30,6 @@
         .dropdown-content button:hover { background-color: #3b82f6; color: white; }
         .dropdown:hover .dropdown-content { display: block; }
         
-        /* Mencegah header memotong dropdown */
         header { overflow: visible !important; position: relative; z-index: 50; }
     </style>
 </head>
@@ -105,7 +103,7 @@
                 <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-slate-800">
                     <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">System Intelligence</h3>
                     <p class="text-[11px] text-slate-500 leading-relaxed uppercase">
-                        💡 <b>Navigation:</b> Dropdown kini memiliki prioritas visual tertinggi. Gunakan untuk beralih instrumen tanpa lag.
+                        💡 <b>Navigation:</b> Dropdown dan Kartu Crypto kini menggunakan <i>Single Asset Fetching</i> untuk mencegah backend crash.
                     </p>
                 </div>
             </div>
@@ -177,28 +175,35 @@
         syncDashboard();
     };
 
+    // FUNGSI UTAMA: Fetch Data Per Aset agar Backend Ringan
     async function syncDashboard() {
         try {
-            const [resGold, resCrypto] = await Promise.all([
-                fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`),
-                fetch(`${API_BASE}/scan/crypto?t=${Date.now()}`)
-            ]);
-            
+            // 1. Fetch Gold & Status
+            const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
             const dataGold = await resGold.json();
-            const dataCrypto = await resCrypto.json();
-
+            
+            if (dataGold.last_price > 0) priceDisplay.innerText = `$${dataGold.last_price}`;
             updateBtn(btnControl, dataGold.running, "GOLD");
-            updateBtn(btnCrypto, dataCrypto.running, "CRYPTO");
 
-            if (dataGold.last_price > 0) {
-                priceDisplay.innerText = `$${dataGold.last_price}`;
-            }
+            // 2. Fetch BTC Secara Mandiri
+            fetch(`${API_BASE}/scan/btc?t=${Date.now()}`)
+                .then(r => r.json())
+                .then(d => { if(d.last_price > 0) document.getElementById('crypto-btc').innerText = `$${d.last_price.toLocaleString()}`; });
 
-            if (dataCrypto.prices) {
-                document.getElementById('crypto-btc').innerText = `$${dataCrypto.prices.BTC.toLocaleString()}`;
-                document.getElementById('crypto-eth').innerText = `$${dataCrypto.prices.ETH.toLocaleString()}`;
-                document.getElementById('crypto-sol').innerText = `$${dataCrypto.prices.SOL.toLocaleString()}`;
-            }
+            // 3. Fetch ETH Secara Mandiri
+            fetch(`${API_BASE}/scan/eth?t=${Date.now()}`)
+                .then(r => r.json())
+                .then(d => { if(d.last_price > 0) document.getElementById('crypto-eth').innerText = `$${d.last_price.toLocaleString()}`; });
+
+            // 4. Fetch SOL Secara Mandiri
+            fetch(`${API_BASE}/scan/sol?t=${Date.now()}`)
+                .then(r => r.json())
+                .then(d => { if(d.last_price > 0) document.getElementById('crypto-sol').innerText = `$${d.last_price.toLocaleString()}`; });
+
+            // 5. Cek Status Global Crypto (Heartbeat)
+            fetch(`${API_BASE}/scan/crypto?t=${Date.now()}`)
+                .then(r => r.json())
+                .then(d => updateBtn(btnCrypto, d.running, "CRYPTO"));
 
             renderSignals();
         } catch (e) { console.error("Sync Error", e); }
