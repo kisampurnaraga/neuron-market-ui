@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NEURON A.I - Indodax Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; }
+        .coin-card { background: #1e293b; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #3b82f6; }
+        .status-buy { color: #22c55e; font-weight: bold; }
+        .status-sell { color: #ef4444; font-weight: bold; }
+        .status-wait { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">🧠 NEURON A.I <span class="text-primary">INDODAX</span></h2>
+        
+        <div class="row">
+            {% for coin, data in market_data.items() %}
+            <div class="col-md-4">
+                <div class="coin-card">
+                    <h4>{{ coin|upper }}/IDR</h4>
+                    <p class="mb-1">Harga: <strong>Rp {{ "{:,}".format(data.price) }}</strong></p>
+                    <p class="mb-1">Sinyal: 
+                        <span class="status-{{ data.signal|lower }}">
+                            {{ data.signal }}
+                        </span>
+                    </p>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar" style="width: {{ (data.history_count/14)*100 }}%"></div>
+                    </div>
+                    <small class="text-muted">Data: {{ data.history_count }}/14</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-4 p-3 bg-dark rounded">
+            <h5>Log Eksekusi Terakhir:</h5>
+            <div id="log-container" style="font-family: monospace; font-size: 12px;">
+                {{ last_log }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
