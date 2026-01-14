@@ -31,6 +31,10 @@
         .dropdown:hover .dropdown-content { display: block; }
         
         header { overflow: visible !important; position: relative; z-index: 50; }
+        
+        /* Animasi Pulsing untuk Status Running */
+        .status-running { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 min-h-screen p-4 md:p-10 font-sans">
@@ -40,7 +44,8 @@
             <div class="mb-4 md:mb-0 flex items-center gap-4">
                 <div>
                     <h1 class="text-3xl font-black tracking-tighter text-blue-500 italic uppercase">Neuron AI</h1>
-                    <div class="flex gap-2 mt-1"> <div class="dropdown relative">
+                    <div class="flex gap-2 mt-1"> 
+                        <div class="dropdown relative">
                             <button class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2 hover:border-blue-500 transition-all">
                                 <span id="current-asset-label" class="text-[10px] font-black text-white uppercase italic tracking-widest">GOLD (XAUUSD)</span>
                                 <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -52,9 +57,8 @@
                                 <button onclick="switchAsset('SOL')">◎ SOLANA / SOL</button>
                             </div>
                         </div>
-
-                        <a href="indodax_dashboard.html" class="...">
-                            <span>🇮🇩 Indodax Live</span>
+                        <a href="indodax_dashboard.html" class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 hover:bg-slate-700">
+                            <span>🇮🇩 INDODAX</span>
                         </a>
                     </div>
                 </div>
@@ -62,15 +66,15 @@
             
             <div class="flex flex-wrap justify-center items-center gap-4">
                 <div id="gold-header-price" class="flex flex-col items-end px-4 border-r border-slate-800 cursor-pointer" onclick="switchAsset('XAUUSD')">
-                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Main Engine (GOLD)</span>
-                    <span id="neuron-price" class="text-xl font-mono-neuron font-bold text-blue-400 glow-text">$0000.00</span>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Live Engine (GOLD)</span>
+                    <span id="neuron-price" class="text-xl font-mono-neuron font-bold text-blue-400 glow-text">$0,000.00</span>
                 </div>
 
                 <div class="flex flex-wrap gap-2 justify-center">
-                    <button id="btn-gold" onclick="toggleScanner('gold')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase whitespace-nowrap">Check Gold</button>
-                    <button id="btn-btc" onclick="toggleScanner('btc')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-orange-600 transition-all uppercase whitespace-nowrap">Start BTC</button>
-                    <button id="btn-eth" onclick="toggleScanner('eth')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-blue-600 transition-all uppercase whitespace-nowrap">Start ETH</button>
-                    <button id="btn-sol" onclick="toggleScanner('sol')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-purple-600 transition-all uppercase whitespace-nowrap">Start SOL</button>
+                    <button id="btn-gold" onclick="toggleScanner('gold')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START GOLD</button>
+                    <button id="btn-btc" onclick="toggleScanner('btc')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START BTC</button>
+                    <button id="btn-eth" onclick="toggleScanner('eth')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START ETH</button>
+                    <button id="btn-sol" onclick="toggleScanner('sol')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START SOL</button>
                 </div>
 
                 <a href="rekap.html" class="px-4 py-2 bg-slate-800 hover:bg-blue-600 text-slate-100 text-[10px] font-black rounded-xl border border-slate-700 transition-all uppercase">📊 Rekap</a>
@@ -110,7 +114,7 @@
                 <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-slate-800">
                     <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">System Intelligence</h3>
                     <p class="text-[11px] text-slate-500 leading-relaxed uppercase">
-                        💡 <b>Navigation:</b> Setiap Engine (BTC, ETH, SOL) kini memiliki tombol kontrol mandiri untuk stabilitas scanning maksimal.
+                        💡 <b>Sync Status:</b> Jalur data saat ini menggunakan Binance Live Engine untuk presisi maksimal. Pastikan indikator RSI dan Fractal sinkron antara Chart dan Signals.
                     </p>
                 </div>
             </div>
@@ -118,10 +122,10 @@
             <div class="bg-slate-900/80 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl backdrop-blur-md">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-blue-500 mb-6 flex items-center gap-2">
                     <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                    Signals
+                    Live Signals
                 </h3>
                 <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 font-mono-neuron text-white">
-                    <p class="text-slate-600 italic text-[10px]">Syncing...</p>
+                    <p class="text-slate-600 italic text-[10px]">Syncing with PythonAnywhere...</p>
                 </div>
             </div>
         </div>
@@ -133,7 +137,6 @@
     const priceDisplay = document.getElementById('neuron-price');
     const assetLabel = document.getElementById('current-asset-label');
     
-    // Objek Tombol
     const buttons = {
         gold: document.getElementById('btn-gold'),
         btc: document.getElementById('btn-btc'),
@@ -148,7 +151,7 @@
         let displayLabel = "";
 
         if (asset.includes("XAU") || asset === "GOLD") {
-            tvSymbol = "OANDA:XAUUSD";
+            tvSymbol = "BINANCE:PAXGUSDT"; // Sesuai dengan scanner.py
             displayLabel = "GOLD (XAUUSD)";
         } else if (asset.includes("BTC")) {
             tvSymbol = "BINANCE:BTCUSDT";
@@ -166,51 +169,45 @@
         assetLabel.innerText = displayLabel;
 
         document.getElementById('tradingview_neuron').innerHTML = ""; 
-        
         new TradingView.widget({
             "autosize": true,
             "symbol": tvSymbol,
-            "interval": "15",
+            "interval": "1",
             "timezone": "Asia/Jakarta",
             "theme": "dark",
             "style": "1",
             "locale": "en",
             "container_id": "tradingview_neuron",
-            "studies": ["RSI@tv-basicstudies", "BB@tv-basicstudies"],
+            "studies": ["RSI@tv-basicstudies"],
             "hide_side_toolbar": false,
             "allow_symbol_change": false,
             "save_image": false
         });
     }
 
-    window.onload = () => {
-        switchAsset("XAUUSD");
-        syncDashboard();
-    };
-
-    // FUNGSI UTAMA: Fetch Data mandiri agar tidak bentrok
     async function syncDashboard() {
         try {
-            // 1. Gold Status
+            // Update GOLD
             const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
             const dataGold = await resGold.json();
-            if (dataGold.last_price > 0) priceDisplay.innerText = `$${dataGold.last_price}`;
+            if (dataGold.last_price > 0) {
+                priceDisplay.innerText = `$${dataGold.last_price.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            }
             updateBtnState(buttons.gold, dataGold.running, "GOLD");
 
-            // 2. Cek Status BTC mandiri
+            // Update BTC
             const resBtc = await fetch(`${API_BASE}/scan/btc?t=${Date.now()}`);
             const dataBtc = await resBtc.json();
             if (dataBtc.last_price > 0) document.getElementById('crypto-btc').innerText = `$${dataBtc.last_price.toLocaleString()}`;
-            // backend harus kirim data 'running' spesifik per koin
             updateBtnState(buttons.btc, dataBtc.running, "BTC");
 
-            // 3. Cek Status ETH mandiri
+            // Update ETH
             const resEth = await fetch(`${API_BASE}/scan/eth?t=${Date.now()}`);
             const dataEth = await resEth.json();
             if (dataEth.last_price > 0) document.getElementById('crypto-eth').innerText = `$${dataEth.last_price.toLocaleString()}`;
             updateBtnState(buttons.eth, dataEth.running, "ETH");
 
-            // 4. Cek Status SOL mandiri
+            // Update SOL
             const resSol = await fetch(`${API_BASE}/scan/sol?t=${Date.now()}`);
             const dataSol = await resSol.json();
             if (dataSol.last_price > 0) document.getElementById('crypto-sol').innerText = `$${dataSol.last_price.toLocaleString()}`;
@@ -220,99 +217,79 @@
         } catch (e) { console.error("Sync Error", e); }
     }
 
-    // FUNGSI TOGGLE: Sekarang spesifik per tombol
     async function toggleScanner(mode) {
         const btn = buttons[mode];
-        if (!btn) return;
-
-        const isStopAction = btn.innerText.includes("STOP");
-        const action = isStopAction ? 'stop' : 'start';
+        const isRunning = btn.innerText.includes("STOP");
+        const action = isRunning ? 'stop' : 'start';
         
-        // Visual feedback hanya untuk tombol yang diklik
-        const originalText = btn.innerText;
         btn.innerText = "WAIT...";
-        btn.style.opacity = "0.5";
+        btn.disabled = true;
 
         try {
-            let endpoint = "";
-            if (mode === 'gold') {
-                endpoint = `scanner/${action}`;
-            } else {
-                // Kirim perintah ke endpoint crypto-scanner dengan parameter koin
-                endpoint = `crypto-scanner/${action}?coin=${mode}`;
-            }
-
-            const response = await fetch(`${API_BASE}/${endpoint}`, { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (response.ok) {
-                console.log(`${mode} ${action} success`);
-            }
+            const endpoint = mode === 'gold' ? `scanner/${action}` : `crypto-scanner/${action}?coin=${mode}`;
+            await fetch(`${API_BASE}/${endpoint}`, { method: 'POST' });
         } catch (e) {
-            console.error(`Error toggling ${mode}`, e);
+            console.error("Toggle Error", e);
         } finally {
-            // Beri jeda sedikit agar backend selesai proses sebelum sync ulang
             setTimeout(() => {
-                btn.style.opacity = "1";
+                btn.disabled = false;
                 syncDashboard();
-            }, 2000);
+            }, 1500);
         }
     }
 
     function updateBtnState(btn, isRunning, label) {
-        if (!btn) return;
-        
-        // Jika sedang running, teks tombol adalah STOP
-        btn.innerText = isRunning ? `🛑 STOP ${label}` : `⚡ START ${label}`;
+        if (!btn || btn.innerText === "WAIT...") return;
         
         if (isRunning) {
-            btn.className = "px-3 py-2 bg-red-600 text-white border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-700 transition-all cursor-pointer uppercase whitespace-nowrap shadow-[0_0_15px_rgba(220,38,38,0.5)]";
+            btn.innerText = `🛑 STOP ${label}`;
+            btn.className = "px-3 py-2 bg-red-600 text-white border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-700 transition-all cursor-pointer uppercase whitespace-nowrap shadow-[0_0_15px_rgba(220,38,38,0.3)]";
         } else {
-            btn.className = "px-3 py-2 bg-green-900/20 text-green-500 border border-green-800 rounded-lg text-[9px] font-black hover:bg-green-500 hover:text-white transition-all cursor-pointer uppercase whitespace-nowrap";
+            btn.innerText = `⚡ START ${label}`;
+            btn.className = "px-3 py-2 bg-slate-800/50 text-slate-400 border border-slate-700 rounded-lg text-[9px] font-black hover:bg-blue-600 hover:text-white transition-all cursor-pointer uppercase whitespace-nowrap";
         }
     }
 
     async function renderSignals() {
         try {
-            const [res1, res2] = await Promise.all([
-                fetch(`${API_BASE}/get-active-trades?t=${Date.now()}`),
-                fetch(`${API_BASE}/get-crypto-trades?t=${Date.now()}`)
-            ]);
-            const goldTrades = await res1.json();
-            const cryptoTrades = await res2.json();
-            const allTrades = [...goldTrades, ...cryptoTrades];
+            const res = await fetch(`${API_BASE}/get-active-trades?t=${Date.now()}`);
+            const trades = await res.json();
             const container = document.getElementById('active-trades-list');
             
-            if (allTrades.length === 0) {
-                container.innerHTML = '<p class="text-slate-600 italic text-[10px] animate-pulse">Waiting for confluence...</p>';
+            if (!trades || trades.length === 0) {
+                container.innerHTML = '<p class="text-slate-600 italic text-[10px]">No Active Signals</p>';
                 return;
             }
 
             container.innerHTML = ''; 
-            allTrades.forEach(trade => {
-                const typeClass = trade.type === 'BUY' ? "text-blue-400" : "text-orange-400";
+            trades.forEach(trade => {
+                const isBuy = trade.type === 'BUY';
+                const color = isBuy ? "blue-400" : "orange-400";
                 container.innerHTML += `
-                    <div onclick="switchAsset('${trade.pair}')" class="bg-slate-800/60 p-4 rounded-3xl border border-slate-700/50 hover:border-blue-500 transition-all duration-300 cursor-pointer">
+                    <div onclick="switchAsset('${trade.pair}')" class="bg-slate-800/60 p-4 rounded-3xl border border-slate-700/50 hover:border-${isBuy?'blue':'orange'}-500 transition-all cursor-pointer">
                         <div class="flex justify-between items-start mb-2">
                             <div>
                                 <span class="text-[8px] text-slate-500 font-black block uppercase">${trade.pair}</span>
-                                <span class="${typeClass} font-black italic text-md">${trade.type}</span>
+                                <span class="text-${color} font-black italic text-md">${trade.type}</span>
                             </div>
+                            <span class="text-[8px] text-slate-600">${trade.time.split(' ')[1]}</span>
                         </div>
                         <div class="grid grid-cols-3 gap-1 bg-black/30 p-2 rounded-xl text-[9px] text-center font-mono-neuron">
-                            <div><p class="text-[6px] text-slate-500">ENT</p>${trade.entry}</div>
-                            <div><p class="text-[6px] text-green-500">TP</p>${trade.tp}</div>
-                            <div><p class="text-[6px] text-red-500">SL</p>${trade.sl}</div>
+                            <div><p class="text-[6px] text-slate-500 uppercase">Entry</p>${trade.entry}</div>
+                            <div><p class="text-[6px] text-green-500 uppercase">Target</p>${trade.tp}</div>
+                            <div><p class="text-[6px] text-red-500 uppercase">Stop</p>${trade.sl}</div>
                         </div>
                     </div>
                 `;
             });
-        } catch (e) { console.log("Signal Error", e); }
+        } catch (e) { }
     }
 
-    setInterval(syncDashboard, 5000);
+    window.onload = () => {
+        switchAsset("XAUUSD");
+        syncDashboard();
+        setInterval(syncDashboard, 5000);
+    };
     </script>
 </body>
 </html>
