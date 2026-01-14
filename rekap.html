@@ -77,7 +77,7 @@
 
         async function loadRekap() {
             try {
-                const res = await fetch(`${API_BASE}/get-backtest?t=${Date.now()}`);
+                const res = await fetch(`${API_BASE}/get-history?t=${Date.now()}`);
                 currentData = await res.json();
                 const tbody = document.getElementById('table-body');
                 
