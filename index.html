@@ -3,36 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEURON STUDIO AI - Multi-Engine</title>
+    <title>NEURON STUDIO AI - GOLD ENGINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         .font-mono-neuron { font-family: 'JetBrains Mono', monospace; }
         .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-        .crypto-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); transition: all 0.3s ease; cursor: pointer; position: relative; z-index: 10; border: 1px solid #1e293b; }
-        .crypto-card:hover { border-color: #3b82f6; transform: translateY(-2px); z-index: 11; }
-        
-        .dropdown-content { 
-            display: none; 
-            position: absolute; 
-            background-color: #0f172a; 
-            min-width: 180px; 
-            box-shadow: 0px 20px 50px rgba(0,0,0,0.8); 
-            z-index: 9999 !important; 
-            border-radius: 1rem; 
-            border: 1px solid #334155; 
-            overflow: hidden;
-            top: 100%;
-            left: 0;
-            margin-top: 5px;
-        }
-        .dropdown-content button { color: #94a3b8; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; font-size: 11px; font-weight: bold; border-bottom: 1px solid #1e293b; transition: all 0.2s; }
-        .dropdown-content button:hover { background-color: #3b82f6; color: white; }
-        .dropdown:hover .dropdown-content { display: block; }
-        
-        header { overflow: visible !important; position: relative; z-index: 50; }
-        
-        /* Animasi Pulsing untuk Status Running */
         .status-running { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); animation: pulse-green 2s infinite; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
@@ -45,76 +21,41 @@
                 <div>
                     <h1 class="text-3xl font-black tracking-tighter text-blue-500 italic uppercase">Neuron AI</h1>
                     <div class="flex gap-2 mt-1"> 
-                        <div class="dropdown relative">
-                            <button class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2 hover:border-blue-500 transition-all">
-                                <span id="current-asset-label" class="text-[10px] font-black text-white uppercase italic tracking-widest">GOLD (XAUUSD)</span>
-                                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div class="dropdown-content">
-                                <button onclick="switchAsset('XAUUSD')">🌕 GOLD / XAUUSD</button>
-                                <button onclick="switchAsset('BTC')">₿ BITCOIN / BTC</button>
-                                <button onclick="switchAsset('ETH')">♦ ETHEREUM / ETH</button>
-                                <button onclick="switchAsset('SOL')">◎ SOLANA / SOL</button>
-                            </div>
+                        <div class="bg-slate-800 border border-blue-500/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                            <span class="text-[10px] font-black text-white uppercase italic tracking-widest">🌕 GOLD ENGINE ACTIVE</span>
                         </div>
-                        <a href="indodax_dashboard.html" class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1 hover:bg-slate-700">
-                            <span>🇮🇩 INDODAX</span>
-                        </a>
                     </div>
                 </div>
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-4">
-                <div id="gold-header-price" class="flex flex-col items-end px-4 border-r border-slate-800 cursor-pointer" onclick="switchAsset('XAUUSD')">
-                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Live Engine (GOLD)</span>
+                <div class="flex flex-col items-end px-4 border-r border-slate-800">
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">XAUUSD Live Price</span>
                     <span id="neuron-price" class="text-xl font-mono-neuron font-bold text-blue-400 glow-text">$0,000.00</span>
                 </div>
 
-                <div class="flex flex-wrap gap-2 justify-center">
-                    <button id="btn-gold" onclick="toggleScanner('gold')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START GOLD</button>
-                    <button id="btn-btc" onclick="toggleScanner('btc')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START BTC</button>
-                    <button id="btn-eth" onclick="toggleScanner('eth')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START ETH</button>
-                    <button id="btn-sol" onclick="toggleScanner('sol')" class="px-3 py-2 text-[9px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">START SOL</button>
+                <div class="flex gap-2">
+                    <button id="btn-gold" onclick="toggleScanner('gold')" class="px-6 py-2 text-[10px] font-black rounded-lg border border-slate-700 bg-slate-800/50 transition-all uppercase whitespace-nowrap">
+                        START GOLD ENGINE
+                    </button>
                 </div>
 
                 <a href="rekap.html" class="px-4 py-2 bg-slate-800 hover:bg-blue-600 text-slate-100 text-[10px] font-black rounded-xl border border-slate-700 transition-all uppercase">📊 Rekap</a>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 relative z-10">
-            <div onclick="switchAsset('BTC')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
-                <div>
-                    <p class="text-[9px] font-bold text-orange-500 uppercase tracking-tighter">Bitcoin</p>
-                    <p id="crypto-btc" class="text-lg font-mono-neuron text-white">$---</p>
-                </div>
-                <span class="text-slate-800 font-black">BTC</span>
-            </div>
-            <div onclick="switchAsset('ETH')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
-                <div>
-                    <p class="text-[9px] font-bold text-blue-400 uppercase tracking-tighter">Ethereum</p>
-                    <p id="crypto-eth" class="text-lg font-mono-neuron text-white">$---</p>
-                </div>
-                <span class="text-slate-800 font-black">ETH</span>
-            </div>
-            <div onclick="switchAsset('SOL')" class="crypto-card p-4 rounded-2xl flex justify-between items-center">
-                <div>
-                    <p class="text-[9px] font-bold text-purple-500 uppercase tracking-tighter">Solana</p>
-                    <p id="crypto-sol" class="text-lg font-mono-neuron text-white">$---</p>
-                </div>
-                <span class="text-slate-800 font-black">SOL</span>
-            </div>
+        <div class="bg-slate-900/40 p-2 md:p-4 rounded-[2rem] border border-slate-800 shadow-inner relative z-0 mb-8">
+            <div id="tradingview_neuron" class="h-[550px] w-full rounded-2xl overflow-hidden border border-slate-800"></div>
         </div>
 
-        <div class="bg-slate-900/40 p-2 md:p-4 rounded-[2rem] border border-slate-800 shadow-inner relative z-0">
-            <div id="tradingview_neuron" class="h-[500px] w-full rounded-2xl overflow-hidden border border-slate-800"></div>
-        </div>
-
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="md:col-span-2 space-y-4">
                 <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-slate-800">
-                    <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">System Intelligence</h3>
+                    <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Intelligence Status</h3>
                     <p class="text-[11px] text-slate-500 leading-relaxed uppercase">
-                        💡 <b>Sync Status:</b> Jalur data saat ini menggunakan Binance Live Engine untuk presisi maksimal. Pastikan indikator RSI dan Fractal sinkron antara Chart dan Signals.
+                        🚀 <b>Mode:</b> High-Frequency Fractal Analysis. <br>
+                        📡 <b>Feed:</b> Yahoo Finance (Stable Connectivity). <br>
+                        ⚖️ <b>Risk:</b> Safe SL Mode ($5.50 Distance).
                     </p>
                 </div>
             </div>
@@ -122,10 +63,10 @@
             <div class="bg-slate-900/80 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl backdrop-blur-md">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-blue-500 mb-6 flex items-center gap-2">
                     <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                    Live Signals
+                    Gold Live Signals
                 </h3>
                 <div id="active-trades-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 font-mono-neuron text-white">
-                    <p class="text-slate-600 italic text-[10px]">Syncing with PythonAnywhere...</p>
+                    <p class="text-slate-600 italic text-[10px]">Scanning markets...</p>
                 </div>
             </div>
         </div>
@@ -135,43 +76,12 @@
     <script>
     const API_BASE = "https://kisampurnaraga.pythonanywhere.com";
     const priceDisplay = document.getElementById('neuron-price');
-    const assetLabel = document.getElementById('current-asset-label');
-    
-    const buttons = {
-        gold: document.getElementById('btn-gold'),
-        btc: document.getElementById('btn-btc'),
-        eth: document.getElementById('btn-eth'),
-        sol: document.getElementById('btn-sol')
-    };
+    const btnGold = document.getElementById('btn-gold');
 
-    let currentSymbol = ""; 
-
-    function switchAsset(asset) {
-        let tvSymbol = "";
-        let displayLabel = "";
-
-        if (asset.includes("XAU") || asset === "GOLD") {
-            tvSymbol = "BINANCE:PAXGUSDT"; // Sesuai dengan scanner.py
-            displayLabel = "GOLD (XAUUSD)";
-        } else if (asset.includes("BTC")) {
-            tvSymbol = "BINANCE:BTCUSDT";
-            displayLabel = "BITCOIN (BTC)";
-        } else if (asset.includes("ETH")) {
-            tvSymbol = "BINANCE:ETHUSDT";
-            displayLabel = "ETHEREUM (ETH)";
-        } else if (asset.includes("SOL")) {
-            tvSymbol = "BINANCE:SOLUSDT";
-            displayLabel = "SOLANA (SOL)";
-        }
-
-        if (currentSymbol === tvSymbol) return; 
-        currentSymbol = tvSymbol;
-        assetLabel.innerText = displayLabel;
-
-        document.getElementById('tradingview_neuron').innerHTML = ""; 
+    function initChart() {
         new TradingView.widget({
             "autosize": true,
-            "symbol": tvSymbol,
+            "symbol": "BINANCE:PAXGUSDT",
             "interval": "1",
             "timezone": "Asia/Jakarta",
             "theme": "dark",
@@ -187,66 +97,45 @@
 
     async function syncDashboard() {
         try {
-            // Update GOLD
-            const resGold = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
-            const dataGold = await resGold.json();
-            if (dataGold.last_price > 0) {
-                priceDisplay.innerText = `$${dataGold.last_price.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            // Hanya fetch Gold
+            const res = await fetch(`${API_BASE}/scan/xauusd?t=${Date.now()}`);
+            const data = await res.json();
+            
+            if (data.last_price > 0) {
+                priceDisplay.innerText = `$${data.last_price.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             }
-            updateBtnState(buttons.gold, dataGold.running, "GOLD");
 
-            // Update BTC
-            const resBtc = await fetch(`${API_BASE}/scan/btc?t=${Date.now()}`);
-            const dataBtc = await resBtc.json();
-            if (dataBtc.last_price > 0) document.getElementById('crypto-btc').innerText = `$${dataBtc.last_price.toLocaleString()}`;
-            updateBtnState(buttons.btc, dataBtc.running, "BTC");
-
-            // Update ETH
-            const resEth = await fetch(`${API_BASE}/scan/eth?t=${Date.now()}`);
-            const dataEth = await resEth.json();
-            if (dataEth.last_price > 0) document.getElementById('crypto-eth').innerText = `$${dataEth.last_price.toLocaleString()}`;
-            updateBtnState(buttons.eth, dataEth.running, "ETH");
-
-            // Update SOL
-            const resSol = await fetch(`${API_BASE}/scan/sol?t=${Date.now()}`);
-            const dataSol = await resSol.json();
-            if (dataSol.last_price > 0) document.getElementById('crypto-sol').innerText = `$${dataSol.last_price.toLocaleString()}`;
-            updateBtnState(buttons.sol, dataSol.running, "SOL");
+            // Update Button State
+            if (btnGold.innerText !== "WAIT...") {
+                if (data.running) {
+                    btnGold.innerText = `🛑 STOP GOLD ENGINE`;
+                    btnGold.className = "px-6 py-2 bg-red-600 text-white border border-red-800 rounded-lg text-[10px] font-black hover:bg-red-700 transition-all cursor-pointer shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                } else {
+                    btnGold.innerText = `⚡ START GOLD ENGINE`;
+                    btnGold.className = "px-6 py-2 bg-slate-800/50 text-blue-400 border border-slate-700 rounded-lg text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all cursor-pointer";
+                }
+            }
 
             renderSignals();
         } catch (e) { console.error("Sync Error", e); }
     }
 
     async function toggleScanner(mode) {
-        const btn = buttons[mode];
-        const isRunning = btn.innerText.includes("STOP");
+        const isRunning = btnGold.innerText.includes("STOP");
         const action = isRunning ? 'stop' : 'start';
         
-        btn.innerText = "WAIT...";
-        btn.disabled = true;
+        btnGold.innerText = "WAIT...";
+        btnGold.disabled = true;
 
         try {
-            const endpoint = mode === 'gold' ? `scanner/${action}` : `crypto-scanner/${action}?coin=${mode}`;
-            await fetch(`${API_BASE}/${endpoint}`, { method: 'POST' });
+            await fetch(`${API_BASE}/scanner/${action}`, { method: 'POST' });
         } catch (e) {
             console.error("Toggle Error", e);
         } finally {
             setTimeout(() => {
-                btn.disabled = false;
+                btnGold.disabled = false;
                 syncDashboard();
-            }, 1500);
-        }
-    }
-
-    function updateBtnState(btn, isRunning, label) {
-        if (!btn || btn.innerText === "WAIT...") return;
-        
-        if (isRunning) {
-            btn.innerText = `🛑 STOP ${label}`;
-            btn.className = "px-3 py-2 bg-red-600 text-white border border-red-800 rounded-lg text-[9px] font-black hover:bg-red-700 transition-all cursor-pointer uppercase whitespace-nowrap shadow-[0_0_15px_rgba(220,38,38,0.3)]";
-        } else {
-            btn.innerText = `⚡ START ${label}`;
-            btn.className = "px-3 py-2 bg-slate-800/50 text-slate-400 border border-slate-700 rounded-lg text-[9px] font-black hover:bg-blue-600 hover:text-white transition-all cursor-pointer uppercase whitespace-nowrap";
+            }, 2000);
         }
     }
 
@@ -262,22 +151,22 @@
             }
 
             container.innerHTML = ''; 
-            trades.forEach(trade => {
+            // Hanya tampilkan yang pair-nya XAUUSD
+            trades.filter(t => t.pair === 'XAUUSD').reverse().forEach(trade => {
                 const isBuy = trade.type === 'BUY';
-                const color = isBuy ? "blue-400" : "orange-400";
+                const colorClass = isBuy ? "text-blue-400" : "text-orange-400";
+                const borderClass = isBuy ? "border-blue-900/30" : "border-orange-900/30";
+
                 container.innerHTML += `
-                    <div onclick="switchAsset('${trade.pair}')" class="bg-slate-800/60 p-4 rounded-3xl border border-slate-700/50 hover:border-${isBuy?'blue':'orange'}-500 transition-all cursor-pointer">
+                    <div class="bg-slate-800/40 p-4 rounded-2xl border ${borderClass} hover:border-slate-600 transition-all">
                         <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <span class="text-[8px] text-slate-500 font-black block uppercase">${trade.pair}</span>
-                                <span class="text-${color} font-black italic text-md">${trade.type}</span>
-                            </div>
+                            <span class="${colorClass} font-black italic text-md">${trade.type} GOLD</span>
                             <span class="text-[8px] text-slate-600">${trade.time.split(' ')[1]}</span>
                         </div>
-                        <div class="grid grid-cols-3 gap-1 bg-black/30 p-2 rounded-xl text-[9px] text-center font-mono-neuron">
-                            <div><p class="text-[6px] text-slate-500 uppercase">Entry</p>${trade.entry}</div>
-                            <div><p class="text-[6px] text-green-500 uppercase">Target</p>${trade.tp}</div>
-                            <div><p class="text-[6px] text-red-500 uppercase">Stop</p>${trade.sl}</div>
+                        <div class="grid grid-cols-3 gap-1 bg-black/40 p-2 rounded-xl text-[10px] text-center font-mono-neuron">
+                            <div><p class="text-[7px] text-slate-500 uppercase">Entry</p>${trade.entry}</div>
+                            <div><p class="text-[7px] text-green-500 uppercase">TP</p>${trade.tp}</div>
+                            <div><p class="text-[7px] text-red-500 uppercase">SL</p>${trade.sl}</div>
                         </div>
                     </div>
                 `;
@@ -286,7 +175,7 @@
     }
 
     window.onload = () => {
-        switchAsset("XAUUSD");
+        initChart();
         syncDashboard();
         setInterval(syncDashboard, 5000);
     };
