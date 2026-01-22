@@ -77,12 +77,13 @@
 
         async function loadRekap() {
             try {
+                // Tambahkan timestamp anti-cache agar data selalu fresh dari PythonAnywhere
                 const res = await fetch(`${API_BASE}/get-history?t=${Date.now()}`);
                 currentData = await res.json();
                 const tbody = document.getElementById('table-body');
                 
                 if (!currentData || currentData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic">No historical data found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-600 italic uppercase text-[10px]">No historical data found.</td></tr>';
                     return;
                 }
 
@@ -91,22 +92,23 @@
                 let html = '';
 
                 currentData.forEach(item => {
-                    const pnl = parseFloat(item.pnl || 0);
-                    totalPnl += pnl;
+                    // SINKRONISASI: Baca 'pnl' atau 'profit' (Mencegah hasil 0)
+                    const pnlValue = parseFloat(item.pnl || item.profit || 0);
+                    totalPnl += pnlValue;
 
-                    const isWin = (item.result === "PROFIT" || pnl > 0);
+                    // Logika Win: Berdasarkan teks Result atau angka PnL
+                    const isWin = (item.result === "PROFIT" || pnlValue > 0);
                     if (isWin) wins++;
 
                     const resultColor = isWin ? "text-green-500" : "text-red-500";
-                    const pnlColor = pnl >= 0 ? "text-green-600" : "text-red-600";
+                    const pnlColor = pnlValue >= 0 ? "text-green-600" : "text-red-600";
                     
-                    const typeClass = item.type.toUpperCase() === 'BUY' 
+                    const typeClass = String(item.type).toUpperCase() === 'BUY' 
                         ? 'text-blue-400 border-blue-800 bg-blue-900/20' 
                         : 'text-orange-400 border-orange-800 bg-orange-900/20';
 
-                    // Cek Asset icon
                     const asset = item.pair || 'XAUUSD';
-                    const isCrypto = asset.includes('-') || asset === 'BTC' || asset === 'ETH' || asset === 'SOL';
+                    const isCrypto = asset.includes('-') || asset === 'BTC' || asset === 'ETH';
 
                     html += `
                         <tr class="border-b border-slate-800/40 hover:bg-white/5 transition duration-300">
@@ -116,7 +118,7 @@
                                         <span class="w-1.5 h-1.5 rounded-full ${isCrypto ? 'bg-orange-500' : 'bg-yellow-500'}"></span>
                                         ${asset}
                                     </span>
-                                    <span class="font-mono text-[9px] text-slate-500 mt-1">${item.timestamp || '-'}</span>
+                                    <span class="font-mono text-[9px] text-slate-500 mt-1">${item.timestamp || item.time || '-'}</span>
                                 </div>
                             </td>
                             <td class="p-6">
@@ -124,7 +126,7 @@
                                     ${item.type}
                                 </span>
                             </td>
-                            <td class="p-6 font-mono text-slate-300 font-bold">$${parseFloat(item.entry || 0).toLocaleString()}</td>
+                            <td class="p-6 font-mono text-slate-300 font-bold">$${parseFloat(item.entry || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                             <td class="p-6 text-center text-[9px] font-mono">
                                 <div class="flex justify-center gap-2">
                                     <span class="text-red-500/50">SL: ${item.sl}</span>
@@ -134,10 +136,10 @@
                             </td>
                             <td class="p-6 text-right">
                                 <div class="${resultColor} font-black uppercase tracking-tighter text-[11px]">
-                                    ${item.result || (pnl > 0 ? 'PROFIT' : 'LOSS')}
+                                    ${item.result || (pnlValue > 0 ? 'PROFIT' : 'LOSS')}
                                 </div>
                                 <div class="font-mono text-[10px] font-bold ${pnlColor}">
-                                    ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}
+                                    ${pnlValue >= 0 ? '+' : ''}${pnlValue.toFixed(2)}
                                 </div>
                             </td>
                         </tr>
@@ -146,9 +148,9 @@
 
                 tbody.innerHTML = html;
 
-                // Update Stats
+                // Update Stats Dashboard Rekap
                 const totalTrades = currentData.length;
-                const winRate = ((wins / totalTrades) * 100).toFixed(1);
+                const winRate = totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(1) : 0;
                 
                 document.getElementById('total-trades').innerText = totalTrades;
                 document.getElementById('win-rate').innerText = winRate + "%";
@@ -158,21 +160,27 @@
                 pnlElement.className = `text-3xl font-black italic ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`;
 
             } catch (err) { 
-                console.error("Fetch Error:", err);
+                console.error("Rekap Sync Error:", err);
             }
         }
 
+        // Fungsi Download Tetap Menggunakan Fallback Key
         function downloadCSV() {
             if (currentData.length === 0) return;
             const headers = ["Timestamp", "Pair", "Type", "Entry", "SL", "TP", "Result", "PnL"];
-            const rows = currentData.map(r => [r.timestamp, r.pair, r.type, r.entry, r.sl, r.tp, r.result, r.pnl]);
+            const rows = currentData.map(r => [
+                r.timestamp || r.time, 
+                r.pair, r.type, r.entry, r.sl, r.tp, 
+                r.result || (parseFloat(r.pnl || r.profit) > 0 ? 'PROFIT' : 'LOSS'), 
+                r.pnl || r.profit
+            ]);
             
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" 
                              + rows.map(e => e.join(",")).join("\n");
             
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csvContent));
-            link.setAttribute("download", `Neuron_Report_${new Date().toLocaleDateString()}.csv`);
+            link.setAttribute("download", `Neuron_Report_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             link.click();
         }
@@ -185,7 +193,13 @@
             doc.setFontSize(10);
             doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
             
-            const rows = currentData.map(r => [r.timestamp, r.pair, r.type, r.entry, r.result, r.pnl]);
+            const rows = currentData.map(r => [
+                r.timestamp || r.time, 
+                r.pair, r.type, r.entry, 
+                r.result || (parseFloat(r.pnl || r.profit) > 0 ? 'PROFIT' : 'LOSS'), 
+                r.pnl || r.profit
+            ]);
+
             doc.autoTable({
                 head: [['Date', 'Asset', 'Type', 'Entry', 'Result', 'PnL']],
                 body: rows,
@@ -196,10 +210,8 @@
             doc.save("Neuron_Backtest_Report.pdf");
         }
 
-        // Initial Load
         loadRekap();
-        // Auto Refresh data every 10 seconds
-        setInterval(loadRekap, 10000);
+        setInterval(loadRekap, 30000); // Update setiap 30 detik agar tidak berat
     </script>
 </body>
 </html>
